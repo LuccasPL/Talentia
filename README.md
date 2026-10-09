@@ -25,3 +25,7 @@ O painel de contatos inclui toda a base, mesmo sem registro prévio, com contage
 ## Parecer para impressão
 
 Após salvar o texto, Visualizar para PDF abre uma página privada de apresentação com marca Talentia, vaga, identidade do candidato e seções do parecer. A página exige sessão e consulta apenas a base do proprietário; não há link público de compartilhamento. O botão Imprimir ou salvar em PDF abre a impressão do navegador, onde a recrutadora escolhe Salvar como PDF. O documento usa tamanho A4 e margens de 18 mm. O texto salvo é preservado; conteúdo personalizado não é interpretado como HTML e não recebe conclusões automáticas. A data de emissão usa horário de Brasília.
+
+## Rascunhos de convite para entrevista
+
+A aba Convite no perfil prepara textos editáveis de e-mail (assunto e corpo) e WhatsApp em PT-BR. A recrutadora informa sua identificação, nome público da vaga e, opcionalmente, cliente, data, horário de Brasília, formato, local/link e orientações. Textos-base são gerados localmente, sem chamada à IA ou afirmações automáticas sobre o perfil. Sem agenda informada, o convite propõe combinar os detalhes. Os rascunhos são salvos no registro da vaga/candidato, preservando notas, parecer, interesse e etapa. Copiar ou salvar não envia mensagens nem agenda a entrevista. Contatos Não contatar têm preparação e cópia bloqueadas. O painel de contatos oferece acesso direto por Preparar convite.
