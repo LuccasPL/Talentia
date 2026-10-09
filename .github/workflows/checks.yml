@@ -12,5 +12,5 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
-      - run: node --test scripts/ai-access.test.mjs scripts/candidate-search.test.mjs scripts/contact-board.test.mjs scripts/report-presentation.test.mjs scripts/interview-invitation.test.mjs scripts/candidate-update.test.mjs scripts/pdf-import.test.mjs
+      - run: node --test scripts/ai-access.test.mjs scripts/candidate-search.test.mjs scripts/contact-board.test.mjs scripts/report-presentation.test.mjs scripts/interview-invitation.test.mjs scripts/candidate-update.test.mjs scripts/pdf-import.test.mjs scripts/interview-guide.test.mjs
       - run: npm run build
