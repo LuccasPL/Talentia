@@ -35,7 +35,7 @@ Faça deploy, ajuste Site URL/templates e valide os fluxos abaixo antes de entre
 1. Criar duas contas de teste, confirmar e-mail, entrar e sair.
 2. Solicitar recuperação, abrir o link em outro aparelho, alterar a senha e entrar novamente.
 3. Criar vaga com briefing livre, revisar critérios, cadastrar candidato e verificar persistência após logout/login.
-4. Importar PDF de teste até 4 MB; confirmar extração e leitura privada do original.
+4. Importar PDF de teste até 2 MB; confirmar extração e leitura privada do original.
 5. Confirmar que a conta B não lê/edita candidatos, vagas, pareceres nem PDFs da conta A, inclusive pela API Supabase.
 6. Abrir duas sessões e salvar dados concorrentes; o segundo salvamento de uma versão antiga deve retornar conflito, preservando o primeiro.
 7. Conectar Claude, conferir trechos citados, pontos a confirmar e parecer antes de usar CVs reais.
@@ -44,7 +44,7 @@ Tipos, lint e build locais não comprovam a execução dessas regras no Supabase
 
 ## Limites do piloto
 
-Não há cobrança, envio automático de WhatsApp nem confirmação automática de disponibilidade. O relatório é editável e exportado em texto. Cada PDF tem limite de 4 MB para acomodar o limite de requisição da Vercel. A base é carregada em páginas para não cortar candidatos após 1.000 registros. Comparação Claude ainda se limita a 100 perfis e ocorre em lotes sequenciais; avaliar 5.000 currículos exige busca prévia e fila de processamento, ainda não implementadas. Vagas e registros ficam em JSONB versionado nesta etapa; candidatos possuem tabela própria.
+Não há cobrança, envio automático de WhatsApp nem confirmação automática de disponibilidade. O relatório é editável e exportado em texto. Cada PDF tem limite de 2 MB, validado no navegador, na API e no bucket privado. A importação usa uma fila persistente com leitura em segundo plano pelo Claude e recuperação dos resultados ao abrir ou atualizar o painel. A base é carregada em páginas para não cortar candidatos após 1.000 registros. Comparação Claude ainda se limita a 100 perfis e ocorre em lotes sequenciais; avaliar 5.000 currículos exige busca prévia; a fila de importação não remove o limite de 100 perfis por comparação. Vagas e registros ficam em JSONB versionado nesta etapa; candidatos possuem tabela própria.
 
 As regras de isolamento foram testadas no banco Talentia conectado em 9 de outubro de 2026. O teste `supabase/tests/rls.sql` usa contas temporárias dentro de uma transação revertida; verificou isolamento de leitura/escrita, bloqueio de troca de proprietário, regras de leitura dos arquivos privados, rejeição de versões antigas e bloqueio de acesso anônimo. A migration `restrict_table_privileges` removeu privilégios de TRUNCATE, REFERENCES e TRIGGER que vinham das permissões padrão do Supabase. Nenhum dado de teste permaneceu, e o verificador de segurança do Supabase não retornou alertas.
 
