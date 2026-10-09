@@ -28,8 +28,7 @@
       ]
     },
     "types": [
-      "node",
-      "@cloudflare/workers-types"
+      "node"
     ]
   },
   "include": [
@@ -42,6 +41,9 @@
   ],
   "exclude": [
     "node_modules",
-    "examples"
+    "dist",
+    ".wrangler",
+    ".sites-runtime",
+    ".vinext"
   ]
 }
