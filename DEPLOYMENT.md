@@ -45,4 +45,12 @@ Tipos, lint e build locais não comprovam a execução dessas regras no Supabase
 
 Não há cobrança, envio automático de WhatsApp nem confirmação automática de disponibilidade. O relatório é editável e exportado em texto. Cada PDF tem limite de 4 MB para acomodar o limite de requisição da Vercel. A base é carregada em páginas para não cortar candidatos após 1.000 registros. Comparação Claude ainda se limita a 100 perfis e ocorre em lotes sequenciais; avaliar 5.000 currículos exige busca prévia e fila de processamento, ainda não implementadas. Vagas e registros ficam em JSONB versionado nesta etapa; candidatos possuem tabela própria.
 
-As regras de isolamento estão implementadas, mas ainda devem ser testadas no banco conectado. Antes de abrir cadastro público com uso irrestrito da IA, implementar limites de consumo por conta; o piloto é para contas controladas. Retenção, exclusão, consentimento e operação com dados reais devem ser definidos com a recrutadora.
+As regras de isolamento foram testadas no banco Talentia conectado em 9 de outubro de 2026. O teste `supabase/tests/rls.sql` usa contas temporárias dentro de uma transação revertida; verificou isolamento de leitura/escrita, bloqueio de troca de proprietário, regras de leitura dos arquivos privados, rejeição de versões antigas e bloqueio de acesso anônimo. A migration `restrict_table_privileges` removeu privilégios de TRUNCATE, REFERENCES e TRIGGER que vinham das permissões padrão do Supabase. Nenhum dado de teste permaneceu, e o verificador de segurança do Supabase não retornou alertas.
+
+Isso não valida login pelo navegador, entrega de e-mail nem upload/download real de PDFs. Antes de abrir cadastro público com uso irrestrito da IA, implementar limites de consumo por conta; o piloto é para contas controladas. Retenção, exclusão, consentimento e operação com dados reais devem ser definidos com a recrutadora.
+
+## Estado da infraestrutura em 9 de outubro de 2026
+
+- Supabase: projeto Talentia (`feqkkqemsrifauedspeq`), acessível, com tabelas, função de salvamento e bucket privado já existentes. A estrutura inicial foi criada fora do histórico de migrations; não execute a migration inicial novamente neste banco. Reconcilie esse histórico antes de usar `supabase db push`.
+- Computador: `.env.local` contém URL e chave pública do Supabase e está ignorado pelo Git; Claude ainda não configurado.
+- Vercel: nenhum projeto Talentia criado. O plugin retornou HTTP 403 ao tentar criar `talentia-recrutamento` no espaço `luccas-pereira-s-projects` (`team_IABDDxjnqguEdmjdlQBThluT`). Não há CLI autenticado como alternativa. É necessário revisar a autorização da Vercel para esse espaço antes da publicação.
