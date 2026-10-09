@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+const origin='http://127.0.0.1:5173';
+const unauth=await fetch(origin+'/api/workspace',{redirect:'manual'});
+assert.equal(unauth.status,401,'Private API must reject anonymous access');
+const signIn=await fetch(origin+'/signin-with-chatgpt?return_to=/',{redirect:'manual'});
+const cookie=signIn.headers.getSetCookie().map(c=>c.split(';')[0]).join('; ');
+assert.ok(cookie,'Local sign-in should return a test session');
+async function api(path,body){const r=await fetch(origin+path,{method:body?'POST':'GET',headers:{cookie,...(body?{'Content-Type':'application/json',Origin:origin}:{})},body:body?JSON.stringify(body):undefined});return {status:r.status,data:await r.json()};}
+const {data:before,status}=await api('/api/workspace');assert.equal(status,200);assert.ok(before.version);
+const wrongOrigin=await fetch(origin+'/api/workspace',{method:'POST',headers:{cookie,Origin:'https://example.invalid','Content-Type':'application/json'},body:'{}'});assert.equal(wrongOrigin.status,403);
+const stale=await api('/api/workspace',{jobs:before.jobs,records:before.records,version:before.version+1});assert.equal(stale.status,409);
+const invalid=await api('/api/workspace',{jobs:[],records:[],version:before.version});assert.equal(invalid.status,400);
+const protectedAttribute=await api('/api/ai',{action:'analyze',jobId:before.jobs[0].id,criteria:[{id:'protected',text:'Idade de 25 anos',kind:'experiencia',priority:'obrigatorio'}]});assert.equal(protectedAttribute.status,400);
+const condition={id:'schedule',text:'Disponibilidade para escala 6x1',kind:'condicao',priority:'obrigatorio'};
+const result=await api('/api/ai',{action:'analyze',jobId:before.jobs[0].id,criteria:[condition]});assert.equal(result.status,200);assert.ok(result.data.analyses.every(a=>a.evidence.every(e=>e.status==='confirmar'&&!e.quote)),'Current availability must not be inferred');
+const saved=await api('/api/workspace',{jobs:before.jobs,records:before.records,version:before.version});assert.equal(saved.status,200);assert.equal(saved.data.version,before.version+1);
+const after=(await api('/api/workspace')).data;assert.deepEqual(after.jobs,before.jobs);assert.deepEqual(after.records,before.records);
+const upload=await fetch(origin+'/api/upload',{method:'POST',headers:{cookie,Origin:origin},body:new FormData()});assert.equal(upload.status,503,'PDF import must not pretend to work without API configuration');
+const missingFile=await api('/api/files/not-a-candidate');assert.equal(missingFile.status,404);
+console.log('Passed: private access, origin validation, stale-write prevention, input validation, protected criteria, unknown availability, persistence, unconfigured PDF import, private file lookup.');
