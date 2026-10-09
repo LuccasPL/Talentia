@@ -12,6 +12,8 @@ export function filterCandidates(candidates:Candidate[],job:Job,records:RecordDa
   if(filters.onlyEvidence&&!a?.evidence.some(e=>e.status==='encontrada'))return false;
   if(filters.criterionId!=='all'&&!a?.evidence.some(e=>e.criterionId===filters.criterionId&&e.status==='encontrada'))return false;
   if(filters.pending==='contact'&&c.phone.trim()&&c.email.trim())return false;
+  if(filters.pending==='unverified-contact'&&c.phone.trim()&&c.email.trim()&&c.verification?.phone&&c.verification?.email)return false;
+  if(filters.pending==='unverified-location'&&c.city.trim()&&c.verification?.city)return false;
   if(filters.pending==='location'&&c.city.trim())return false;
   if(filters.pending==='interest'&&r&&r.interest!=='Não confirmado')return false;
   if(filters.pending==='availability'&&r?.availability.trim()&&r.availability.trim()!=='Não confirmada')return false;
