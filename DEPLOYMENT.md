@@ -1,6 +1,6 @@
 # Talentia: publicação e validação
 
-A aplicação foi migrada para Next.js, Supabase Auth/Postgres/Storage e Vercel. O código está localmente na branch `migration/supabase-vercel`. A demonstração anterior permanece publicada separadamente; estas alterações ainda não estão no GitHub nem na Vercel.
+A aplicação foi migrada para Next.js, Supabase Auth/Postgres/Storage e Vercel. O código está na branch `main`, ligada ao repositório https://github.com/LuccasPL/Talentia . A demonstração anterior permanece publicada separadamente; esta versão ainda não foi publicada na Vercel.
 
 ## 1. Supabase
 
