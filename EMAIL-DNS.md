@@ -26,6 +26,6 @@ O proprietário criou a chave Resend e inseriu o segredo diretamente no Supabase
 
 O painel de configuração do domínio oferece habilitar métricas após configurar um subdomínio de rastreamento; esse subdomínio não foi configurado. Manter sem rastreamento para os links de autenticação.
 
-Os templates de confirmação e recuperação foram salvos no Supabase com o HTML de `supabase/templates/confirmation.html` e `recovery.html`, assuntos em português e links para `/auth/confirm` com token hash e tipo email/recovery. Site URL e retornos foram reconferidos no painel: produção talentia-two.vercel.app, sem localhost. Cadastro, recebimento e confirmação foram realizados pelo proprietário. Recuperação de senha e chamada real ao Claude ainda aguardam validação.
+Os templates de confirmação e recuperação foram salvos no Supabase com o HTML de `supabase/templates/confirmation.html` e `recovery.html`, assuntos em português e links para `/auth/confirm` com token hash e tipo email/recovery. Site URL e retornos foram reconferidos no painel: produção talentia-two.vercel.app, sem localhost. Cadastro, recebimento e confirmação foram realizados pelo proprietário. Chamadas reais ao Claude foram validadas no piloto com dados fictícios; recuperação de senha ainda aguarda teste.
 
 SMTP: host `smtp.resend.com`, porta `465`, usuário `resend`, nome do remetente `Talentia`, endereço `acesso@auth.inbox-faturas.pt`. A senha SMTP é uma chave Resend restrita ao envio neste domínio e deve ser inserida diretamente no painel pelo proprietário; nunca registrada no Git ou nesta documentação.

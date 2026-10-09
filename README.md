@@ -6,7 +6,7 @@ Assistente de recrutamento com briefing livre por vaga, currículos privados, ev
 
 Copie `.env.example` para `.env.local` e preencha os valores no seu computador, sem versionar segredos. Instale com `npm ci`, execute com `npm run dev`. Verifique com `npm run typecheck`, `npm run lint` e `npm run build`.
 
-O site está publicado em [talentia-two.vercel.app](https://talentia-two.vercel.app), com Supabase configurado. O código está no [GitHub](https://github.com/LuccasPL/Talentia). Consulte [DEPLOYMENT.md](DEPLOYMENT.md) para configurar os e-mails, conectar o Claude e validar os fluxos autenticados antes de usar currículos reais.
+O piloto está publicado em [talentia-two.vercel.app](https://talentia-two.vercel.app), com Supabase, e-mails de confirmação e Claude configurados. O código está no [GitHub](https://github.com/LuccasPL/Talentia). Importação de PDF, critérios, comparação e parecer foram validados em produção com um perfil fictício na conta autorizada do proprietário. Consulte [DEPLOYMENT.md](DEPLOYMENT.md) para os resultados, limites do piloto e autorização de outras contas.
 
 ## Sincronização com o computador
 
