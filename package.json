@@ -9,7 +9,7 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint app lib/supabase lib/server.ts lib/claude.ts lib/domain.ts lib/validation.ts lib/candidate-search.ts lib/contact-board.ts lib/pt-br.ts lib/webmcp.ts proxy.ts",
+    "lint": "eslint app lib/supabase lib/server.ts lib/claude.ts lib/domain.ts lib/validation.ts lib/candidate-search.ts lib/contact-board.ts lib/pt-br.ts lib/report-presentation.ts lib/webmcp.ts proxy.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
