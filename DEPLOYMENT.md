@@ -24,6 +24,7 @@ Configure na Vercel, antes do build:
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: chave pública do projeto.
 - `ANTHROPIC_API_KEY`: segredo da API Claude, somente no servidor.
 - `ANTHROPIC_MODEL`: `claude-sonnet-5-5`, substituível.
+- `TALENTIA_AI_USER_IDS`: IDs das contas Supabase autorizadas no piloto, separados por vírgulas. Sem essa lista, chamadas pagas à IA e importação de PDFs ficam bloqueadas; a organização e busca por termos continuam disponíveis. Use os IDs exibidos em Authentication > Users após criar e confirmar as contas. Não use e-mails, curingas ou metadados editáveis como autorização.
 
 Sem Supabase, o site exibe a tela de configuração e não libera o espaço. Sem Claude, oferece apenas organização e coincidência de termos, identificadas como tal; PDFs exigem Claude. Uma assinatura Claude de consumidor não substitui créditos da API.
 
@@ -58,4 +59,5 @@ Isso não valida login pelo navegador, entrega de e-mail nem upload/download rea
 - Publicação automática confirmada: o envio do commit `5f8479e556927d5744cf683f88532c6468c10ad1` à branch `main` iniciou o deployment `dpl_2tMka2hyMmv3kxofMT3ZZExS4kk3` na produção. GitHub, pasta local e Vercel estão ligados.
 - Autenticação configurada no painel: Site URL `https://talentia-two.vercel.app`, retornos exatos `/auth/callback` e `/auth/callback?next=/reset-password`, confirmação de e-mail habilitada e senha mínima de 12 caracteres. Login anônimo permanece desabilitado.
 - Pendências: SMTP e templates de e-mail. O painel do Supabase exige SMTP personalizado para editar os templates. O proprietário ainda escolherá um domínio; o envio será configurado após verificar esse domínio no provedor. Criação de conta, confirmação, recuperação de senha e fluxos autenticados ainda não foram testados.
-- Claude: formulário da Vercel preparado para `ANTHROPIC_API_KEY`, tipo Secret, ambiente Production, sem preencher ou salvar a chave. O proprietário deve inserir o segredo diretamente no painel. Depois será necessário publicar novamente e validar chamadas; não considerar a IA conectada até isso ocorrer. Antes do uso, definir limite de gastos na Anthropic e restringir o piloto a contas autorizadas.
+- Claude: `ANTHROPIC_API_KEY` confirmada na Vercel como Secret (`sensitive`), exclusivamente em Production, sem revelar ou recuperar seu valor. Chamadas pagas exigem um ID autorizado em `TALENTIA_AI_USER_IDS`, verificado no servidor a partir da sessão do Supabase. A lista ainda depende da criação das contas do piloto. A existência da chave não comprova que a API funciona; extração de PDF e análise reais ainda precisam de teste autenticado. Defina também um limite de gastos no projeto Anthropic.
+- Resend: plugin instalado, mas sem ferramentas de conta disponíveis nesta sessão; painel aberto como alternativa. Domínio e SMTP ainda não configurados.

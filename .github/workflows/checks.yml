@@ -12,4 +12,5 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
+      - run: node --test scripts/ai-access.test.mjs
       - run: npm run build
