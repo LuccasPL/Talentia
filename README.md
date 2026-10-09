@@ -58,3 +58,6 @@ Datas digitadas são convertidas usando America/Sao_Paulo e armazenadas como ins
 # Painel de acompanhamento
 
 O menu Acompanhamento reúne etapas, retornos pendentes, pareceres a revisar e próximas entrevistas por vaga ou em todas as vagas. Só entram candidatos comparados ou com registros no processo; toda a base não é automaticamente vinculada a cada vaga. O total de pessoas é único, enquanto as etapas contam participações por vaga. Os atalhos abrem o perfil na vaga correspondente. O painel usa os dados privados já salvos, sem alterar etapas, confirmar disponibilidade ou enviar mensagens.
+# Lista de interesse por vaga
+
+As estrelas do banco de talentos e a ação no perfil permitem marcar candidatos para uma lista privada por vaga. A marcação é manual, salva em `records.shortlisted` pelo mesmo acesso com RLS e controle de versão do restante do espaço. Ela não altera etapa, interesse ou disponibilidade e não envia mensagens. A lista reúne os trechos já analisados, próximas entrevistas, situação de contato e pareceres; busca sem distinguir acentos e filtro de etapa se combinam, com paginação de 24 perfis. Remover uma marcação mantém o candidato, o currículo e todos os registros. Não há nova chamada de IA para marcar ou visualizar a lista.
