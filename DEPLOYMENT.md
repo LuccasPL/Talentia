@@ -1,6 +1,6 @@
 # Talentia: publicação e validação
 
-A aplicação foi migrada para Next.js, Supabase Auth/Postgres/Storage e Vercel. O código está na branch `main`, ligada ao repositório https://github.com/LuccasPL/Talentia . A demonstração anterior permanece publicada separadamente; esta versão ainda não foi publicada na Vercel.
+A aplicação foi migrada para Next.js, Supabase Auth/Postgres/Storage e Vercel. O código está na branch `main`, ligada ao repositório https://github.com/LuccasPL/Talentia . A publicação de produção está em https://talentia-two.vercel.app . A demonstração anterior permanece separada.
 
 ## 1. Supabase
 
@@ -53,4 +53,6 @@ Isso não valida login pelo navegador, entrega de e-mail nem upload/download rea
 
 - Supabase: projeto Talentia (`feqkkqemsrifauedspeq`), acessível, com tabelas, função de salvamento e bucket privado já existentes. A estrutura inicial foi criada fora do histórico de migrations; não execute a migration inicial novamente neste banco. Reconcilie esse histórico antes de usar `supabase db push`.
 - Computador: `.env.local` contém URL e chave pública do Supabase e está ignorado pelo Git; Claude ainda não configurado.
-- Vercel: nenhum projeto Talentia criado. O plugin retornou HTTP 403 ao tentar criar `talentia-recrutamento` no espaço `luccas-pereira-s-projects` (`team_IABDDxjnqguEdmjdlQBThluT`). Não há CLI autenticado como alternativa. É necessário revisar a autorização da Vercel para esse espaço antes da publicação.
+- Vercel: projeto `talentia` (`prj_VmvYEOTeB3GSjkKY4X2LNoKDBS2N`), no espaço `team_IABDDxjnqguEdmjdlQBThluT`, publicado em https://talentia-two.vercel.app . O deployment `dpl_8z5HV36tyVyM4CScnzJUtoj5N9P7` compilou com sucesso a versão `42cd30c092aca96ea69e7fe232bce8229be7a92a` do GitHub. URL e chave pública do Supabase estão configuradas nos três ambientes. Produção está liberada conforme autorização explícita do proprietário; prévias continuam protegidas pela Vercel.
+- Verificação de produção: `node scripts/check-production.mjs` passou, confirmando login público, redirecionamento da página principal para login, rejeição de acesso anônimo aos dados/PDFs e rejeição de solicitações de outra origem. Formulários de login e cadastro também foram conferidos no navegador, sem criar contas.
+- Pendências: Site URL/URLs de retorno, templates e SMTP do Supabase devem ser configurados e verificados; criação de conta, confirmação, recuperação de senha e fluxos autenticados ainda não foram testados. Claude ainda não conectado. O deployment foi feito a partir do repositório; a publicação automática a cada push ainda deve ser confirmada nas configurações Git da Vercel.
