@@ -20,8 +20,10 @@ Preservar registros de site, nameservers e os MX existentes `mx1.improvmx.com` /
 
 ## Estado
 
-O Resend criou o domínio e gerou os registros. Ainda não foram adicionados ao DNS: o painel Domínios.pt solicitou login. A verificação do domínio e o envio de e-mails ainda não estão concluídos.
+Os três registros foram adicionados na Domínios.pt e confirmados no DNS público em 9 de outubro de 2026, com TTL de 3600 segundos. O painel requer aspas duplas ao salvar o TXT e exige destinos CNAME sem ponto final. O Resend confirmou o domínio como **Verified**. Registros de site, recebimento e nameservers existentes foram preservados.
 
-Após o login: verificar conflitos nos três nomes, adicionar os registros ausentes, consultar o DNS público e solicitar verificação no Resend. Desativar rastreamento de cliques/aberturas para os links de autenticação. Depois configurar SMTP do Supabase e os templates em `supabase/templates`.
+O formulário de criação de chave Resend foi preparado com nome `Talentia — Supabase Auth`, permissão `Sending access` e domínio `auth.inbox-faturas.pt`; a chave ainda não foi criada. O proprietário deve concluir a criação e copiar o segredo diretamente para o campo Password do Supabase. O formulário SMTP do Supabase contém remetente, nome, host, porta e usuário, mas ainda não foi salvo. Não considerar o envio ativo até salvar e testar a entrega.
+
+O painel de configuração do domínio oferece habilitar métricas após configurar um subdomínio de rastreamento; esse subdomínio não foi configurado. Manter sem rastreamento para os links de autenticação. Depois de salvar SMTP, configurar os templates em `supabase/templates` e testar confirmação e recuperação.
 
 SMTP: host `smtp.resend.com`, porta `465`, usuário `resend`, nome do remetente `Talentia`, endereço `acesso@auth.inbox-faturas.pt`. A senha SMTP é uma chave Resend restrita ao envio neste domínio e deve ser inserida diretamente no painel pelo proprietário; nunca registrada no Git ou nesta documentação.
