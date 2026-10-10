@@ -12,5 +12,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
-      - run: node --test scripts/ai-access.test.mjs scripts/candidate-search.test.mjs scripts/contact-board.test.mjs scripts/report-presentation.test.mjs scripts/interview-invitation.test.mjs scripts/candidate-update.test.mjs scripts/pdf-import.test.mjs scripts/interview-guide.test.mjs scripts/interview-agenda.test.mjs scripts/recruitment-overview.test.mjs scripts/candidate-shortlist.test.mjs scripts/weekly-calendar.test.mjs scripts/candidate-duplicates.test.mjs scripts/candidate-batch.test.mjs scripts/contact-follow-up.test.mjs
+      - run: npm run test
+      - run: npm audit --omit=dev --audit-level=high
       - run: npm run build
+      - run: npm run security:client

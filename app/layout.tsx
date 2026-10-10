@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import {headers} from 'next/headers';
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,11 +11,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Nonces must be rendered per request, including the login screen.
+  await headers();
   return (
     <html lang="pt-BR">
       <body className="antialiased">{children}</body>

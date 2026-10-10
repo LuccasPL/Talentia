@@ -1,15 +1,18 @@
+import {enforceRateLimit} from '@/lib/rate-limit';
+import {readForm} from '@/lib/http-security';
+import {readJson} from '@/lib/http-security';
 import {z} from 'zod';
 import {owner,database,checkOrigin,apiError,HttpError,requireAiAccess,readData} from '@/lib/server';
 import {listImports,submitImport,syncImports,retryImport} from '@/lib/import-server';
 import {MAX_PDF_BYTES} from '@/lib/pdf-import';
 export const maxDuration=300;
-export async function GET(){try{return Response.json({imports:await listImports(await owner())},{headers:{'Cache-Control':'no-store'}})}catch(e){return apiError(e)}}
-export async function PATCH(request:Request){try{checkOrigin(request);const id=await owner();requireAiAccess(id);const completed=await syncImports(id);return Response.json({imports:await listImports(id),...(completed?{data:await readData(id)}:{})})}catch(e){return apiError(e)}}
+export async function GET(){try{const id=await owner();await enforceRateLimit('imports-read');return Response.json({imports:await listImports(id)},{headers:{'Cache-Control':'no-store'}})}catch(e){return apiError(e)}}
+export async function PATCH(request:Request){try{checkOrigin(request);const id=await owner();requireAiAccess(id);await enforceRateLimit('imports-sync');const completed=await syncImports(id);return Response.json({imports:await listImports(id),...(completed?{data:await readData(id)}:{})})}catch(e){return apiError(e)}}
 export async function POST(request:Request){try{
- checkOrigin(request);const id=await owner();requireAiAccess(id);
+ checkOrigin(request);const id=await owner();requireAiAccess(id);await enforceRateLimit('upload');
  if(!process.env.ANTHROPIC_API_KEY)throw new HttpError('Conecte o Claude para importar PDFs.',503);
- if(request.headers.get('content-type')?.includes('application/json')){const {importId}=z.object({importId:z.string().uuid()}).parse(await request.json());await retryImport(id,importId);return Response.json({imports:await listImports(id)})}
- const file=(await request.formData()).get('file');
+ if(request.headers.get('content-type')?.includes('application/json')){const {importId}=z.object({importId:z.string().uuid()}).parse(await readJson(request,262144));await retryImport(id,importId);return Response.json({imports:await listImports(id)})}
+ const file=(await readForm(request)).get('file');
  if(!(file instanceof File)||!file.size||file.size>MAX_PDF_BYTES)throw new HttpError('Selecione um PDF de até 2 MB.');
  const bytes=new Uint8Array(await file.arrayBuffer());if(new TextDecoder().decode(bytes.slice(0,5))!=='%PDF-')throw new HttpError('O arquivo não é um PDF válido.');
  const digest=Buffer.from(await crypto.subtle.digest('SHA-256',bytes)).toString('hex'),key=`${id}/${digest}.pdf`,db=await database();

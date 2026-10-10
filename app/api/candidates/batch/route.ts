@@ -1,3 +1,5 @@
+import {enforceRateLimit} from '@/lib/rate-limit';
+import {readJson} from '@/lib/http-security';
 import {z} from 'zod';
 import {recordSchema} from '@/lib/validation';
 import {applyCandidateBatch} from '@/lib/candidate-batch';
@@ -5,7 +7,7 @@ import {owner,readData,database,checkOrigin,apiError,HttpError} from '@/lib/serv
 export const dynamic='force-dynamic';
 const inputSchema=z.object({jobId:z.string().min(1).max(100),candidateIds:z.array(z.string().min(1).max(100)).min(1).max(100),version:z.number().int().positive(),action:z.enum(['shortlist','invitations']),settings:z.object({recruiter:z.string().trim().min(1).max(200),company:z.string().trim().max(200),roleTitle:z.string().trim().min(1).max(200),instructions:z.string().trim().max(2000)}).optional()});
 export async function POST(request:Request){try{
- checkOrigin(request);const id=await owner();const input=inputSchema.parse(await request.json());const current=await readData(id);
+ checkOrigin(request);const id=await owner();await enforceRateLimit('write');const input=inputSchema.parse(await readJson(request,262144));const current=await readData(id);
  if(current.version!==input.version)throw new HttpError('Este espaço mudou em outra sessão. Recarregue a página antes de salvar.',409);
  let result;try{result=applyCandidateBatch(current,input.jobId,input.candidateIds,input.action,input.settings,new Date().toISOString());}catch(e){throw new HttpError((e as Error).message);}
  const records=z.array(recordSchema).max(10000).parse(result.records);

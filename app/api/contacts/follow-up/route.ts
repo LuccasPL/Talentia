@@ -1,3 +1,5 @@
+import {enforceRateLimit} from '@/lib/rate-limit';
+import {readJson} from '@/lib/http-security';
 import {z} from 'zod';
 import {recordSchema} from '@/lib/validation';
 import {emptyRecord} from '@/lib/domain';
@@ -5,7 +7,7 @@ import {recordFollowUp} from '@/lib/contact-follow-up';
 import {owner,readData,database,checkOrigin,apiError,HttpError} from '@/lib/server';
 export const dynamic='force-dynamic';
 const schema=z.object({candidateId:z.string().min(1).max(100),jobId:z.string().min(1).max(100),version:z.number().int().positive(),action:z.enum(['schedule','complete','cancel']),date:z.string().max(10).default(''),note:z.string().max(2000).default('')});
-export async function POST(request:Request){try{checkOrigin(request);const id=await owner(),input=schema.parse(await request.json()),current=await readData(id);
+export async function POST(request:Request){try{checkOrigin(request);const id=await owner();await enforceRateLimit('write');const input=schema.parse(await readJson(request,262144)),current=await readData(id);
  if(current.version!==input.version)throw new HttpError('Este espaço mudou em outra sessão. Recarregue a página antes de salvar.',409);
  if(!current.candidates.some(c=>c.id===input.candidateId)||!current.jobs.some(j=>j.id===input.jobId))throw new HttpError('A vaga ou o candidato não está disponível.',404);
  const stored=current.records.find(r=>r.candidateId===input.candidateId&&r.jobId===input.jobId)||emptyRecord(input.candidateId,input.jobId);

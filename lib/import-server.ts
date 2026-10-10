@@ -1,4 +1,5 @@
 import 'server-only';
+import {enforceRateLimit} from './rate-limit';
 import {createHmac,timingSafeEqual} from 'node:crypto';
 import {database,HttpError,requireAiAccess} from './server';
 import {SYSTEM} from './claude';
@@ -15,7 +16,7 @@ async function anthropic(path:string,init:RequestInit={}){
 }
 export async function listImports(owner:string){const db=await database();const result=await db.from('pdf_imports').select('id,source,status,error,created_at,checked_at,candidate_id').eq('owner',owner).order('created_at',{ascending:false}).limit(100);if(result.error)throw new HttpError('Não foi possível carregar as importações.',503);return result.data;}
 export async function submitImport(row:StoredImport,bytes:Uint8Array){
- requireAiAccess(row.owner);const db=await database();
+ requireAiAccess(row.owner);await enforceRateLimit('ai-call');const db=await database();
  // Only this compare-and-set winner may submit a paid request.
  const claim=await db.from('pdf_imports').update({status:'sending',error:''}).eq('owner',row.owner).eq('id',row.id).eq('status','failed').select('id');
  if(claim.error||!claim.data?.length)throw new HttpError('Este arquivo já está sendo processado.',409);
