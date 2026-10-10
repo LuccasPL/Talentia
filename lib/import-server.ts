@@ -13,7 +13,7 @@ async function anthropic(path:string,init:RequestInit={}){
  if(!response.ok)throw new HttpError('Não foi possível consultar a leitura dos PDFs. Tente novamente em alguns instantes.',502);
  return response;
 }
-export async function listImports(owner:string){const db=await database();const result=await db.from('pdf_imports').select('id,source,status,error,created_at,candidate_id').eq('owner',owner).order('created_at',{ascending:false}).limit(100);if(result.error)throw new HttpError('Não foi possível carregar as importações.',503);return result.data;}
+export async function listImports(owner:string){const db=await database();const result=await db.from('pdf_imports').select('id,source,status,error,created_at,checked_at,candidate_id').eq('owner',owner).order('created_at',{ascending:false}).limit(100);if(result.error)throw new HttpError('Não foi possível carregar as importações.',503);return result.data;}
 export async function submitImport(row:StoredImport,bytes:Uint8Array){
  requireAiAccess(row.owner);const db=await database();
  // Only this compare-and-set winner may submit a paid request.
@@ -36,14 +36,18 @@ export async function submitImport(row:StoredImport,bytes:Uint8Array){
 export async function syncImports(owner:string){
  requireAiAccess(owner);const db=await database();const pending=await db.from('pdf_imports').select('*').eq('owner',owner).eq('status','processing').order('checked_at',{ascending:true,nullsFirst:true}).limit(10);
  if(pending.error)throw new HttpError('Não foi possível conferir o processamento.',503);
- let completed=false;
+ let completed=false;const deadline=Date.now()+60000;
  for(const row of pending.data as StoredImport[]){
+  if(Date.now()>deadline)break;
   try{
    // Owner-editable metadata is never sufficient to authorize a provider batch.
-   const expected=signature(row,row.batch_id||'');
-   if(!row.batch_id||!/^msgbatch_[a-zA-Z0-9]+$/.test(row.batch_id)||!row.batch_signature||!/^[a-f0-9]{64}$/.test(row.batch_signature)||!timingSafeEqual(Buffer.from(row.batch_signature),Buffer.from(expected)))continue;
    await db.from('pdf_imports').update({checked_at:new Date().toISOString()}).eq('owner',owner).eq('id',row.id);
+   const expected=signature(row,row.batch_id||'');
+   if(!row.batch_id||!/^msgbatch_[a-zA-Z0-9]+$/.test(row.batch_id)||!row.batch_signature||!/^[a-f0-9]{64}$/.test(row.batch_signature)||!timingSafeEqual(Buffer.from(row.batch_signature),Buffer.from(expected))){
+    await db.from('pdf_imports').update({error:'O acompanhamento desta leitura precisa de verificação. Não reenvie o PDF; solicite suporte.'}).eq('owner',owner).eq('id',row.id);continue;
+   }
    const batch=await (await anthropic(`/${row.batch_id}`)).json() as {processing_status:string};
+   await db.from('pdf_imports').update({error:''}).eq('owner',owner).eq('id',row.id);
    if(batch.processing_status!=='ended')continue;
    const response=await anthropic(`/${row.batch_id}/results`);
    let candidate;
@@ -52,7 +56,10 @@ export async function syncImports(owner:string){
    const result=await db.rpc('complete_pdf_import',{import_id:row.id,new_payload:candidate});
    if(result.error)throw new HttpError('Não foi possível salvar o perfil. A leitura será recuperada na próxima atualização.',503);
    completed=true;
-  }catch(e){if(e instanceof HttpError&&e.status===503)throw e;/* temporary provider errors retain durable state */}
+  }catch(e){
+   // Keep the original batch so an interrupted check never incurs another paid submission.
+   await db.from('pdf_imports').update({error:e instanceof HttpError?e.message:'A consulta demorou mais que o esperado. A Talentia tentará recuperar esta mesma leitura na próxima atualização.'}).eq('owner',owner).eq('id',row.id);
+  }
  }
  return completed;
 }

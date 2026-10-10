@@ -1,5 +1,5 @@
 export const MAX_PDF_BYTES=2*1024*1024;
-export type ImportRow={id:string;source:string;status:'sending'|'processing'|'completed'|'failed';error:string;created_at:string;candidate_id:string};
+export type ImportRow={id:string;source:string;status:'sending'|'processing'|'completed'|'failed';error:string;created_at:string;checked_at?:string|null;candidate_id:string};
 export const importLabels={sending:'Enviando para leitura',processing:'Em processamento',completed:'Importado',failed:'Precisa de atenção'};
 export function pdfProblem(file:{name:string;size:number}){if(!/\.pdf$/i.test(file.name))return 'Selecione um arquivo PDF.';if(file.size===0)return 'O arquivo está vazio.';if(file.size>MAX_PDF_BYTES)return 'O PDF ultrapassa o limite de 2 MB.';return '';}
 export type BatchLine={custom_id:string;result:{type:string;message?:{stop_reason:string;content:{type:string;text?:string}[]}}};
