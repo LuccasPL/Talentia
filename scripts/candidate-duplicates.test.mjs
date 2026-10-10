@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {duplicatePairs,mergeCandidateData,defaultMergeChoices} from '../lib/candidate-duplicates.ts';
+import {duplicatePairs,mergeCandidateData,defaultMergeChoices,preservedVersions} from '../lib/candidate-duplicates.ts';
 import {emptyRecord} from '../lib/domain.ts';
 const profile=(id,extra={})=>({id,name:'Pessoa Fictícia Teste',role:'Atendimento',city:'São Paulo',phone:'',email:'',text:'Experiência fictícia com atendimento em loja e recepção.',source:`CV ${id}.pdf`,fileKey:`owner/${id}.pdf`,updated:'2026-10-10T10:00:00.000Z',demo:false,...extra});
 const primary=profile('a',{phone:'(11) 91234-5678',email:'PESSOA@example.invalid',verification:{phone:{at:'old',method:'Telefone'}}}),secondary=profile('b',{name:'Pessoa Ficticia Teste',phone:'+55 11 91234-5678',email:'pessoa@example.invalid'});
@@ -32,6 +32,12 @@ test('new-vacancy records are moved into the principal without dropping the orig
  const b={...emptyRecord('b','other-job'),status:'Respondeu',availability:'Manhã'};
  const result=mergeCandidateData({...data(),records:[b]},'a','b',defaultMergeChoices,'now');
  assert.equal(result.records.find(r=>r.candidateId==='a').jobId,'other-job');assert.equal(result.records.find(r=>r.candidateId==='a').availability,'Manhã');assert.deepEqual(result.records.find(r=>r.candidateId==='b'),b);
+});
+test('a restored profile remains accessible as the chosen CV version without duplicate version entries',()=>{
+ const merged=mergeCandidateData(data(),'a','b',{...defaultMergeChoices,text:'secondary'},'now');
+ assert.deepEqual(preservedVersions(merged,merged.candidates[0]).map(c=>c.id),['a','b']);
+ const restored={...merged,candidates:[...merged.candidates,secondary],archivedCandidates:[]};
+ assert.deepEqual(preservedVersions(restored,restored.candidates[0]).map(c=>c.id),['a','b']);
 });
 test('merges reject unavailable profiles, loops and overflowing histories instead of truncating data',()=>{
  assert.throws(()=>mergeCandidateData(data(),'a','a',defaultMergeChoices,'now'));

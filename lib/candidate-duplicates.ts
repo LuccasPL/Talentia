@@ -6,6 +6,12 @@ export type MergeChoices=Record<(typeof mergeFields)[number],'primary'|'secondar
 export const defaultMergeChoices:MergeChoices={name:'primary',role:'primary',city:'primary',phone:'primary',email:'primary',text:'primary'};
 export const mergeFieldLabels={name:'Nome',role:'Cargo ou objetivo',city:'Localização',phone:'Telefone',email:'E-mail',text:'Experiências do currículo'};
 export type DuplicatePair={first:Candidate;second:Candidate;reasons:string[]};
+export function preservedVersions(data:Data,candidate:Candidate){
+ const related=[candidate,...(data.archivedCandidates||[]).filter(c=>c.mergedInto===candidate.id)];
+ const current=data.candidates.find(c=>c.id===candidate.cvSourceId);
+ if(current&&!related.some(c=>c.id===current.id))related.push(current);
+ return related;
+}
 const nameKey=(s:string)=>normalize(s).replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' ');
 function phoneKey(s:string){let digits=s.replace(/\D/g,'');if(digits.startsWith('00'))digits=digits.slice(2);if((digits.length===12||digits.length===13)&&digits.startsWith('55'))digits=digits.slice(2);return digits.length>=10&&digits.length<=15&&!/^(\d)\1+$/.test(digits)?digits:'';}
 function emailKey(s:string){const value=s.trim().toLowerCase();return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)?value:'';}
