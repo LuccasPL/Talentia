@@ -1,0 +1,42 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {applyCandidateBatch} from '../lib/candidate-batch.ts';
+import {emptyRecord} from '../lib/domain.ts';
+import {recordSchema} from '../lib/validation.ts';
+const at='2026-10-10T18:00:00.000Z';
+const settings={recruiter:'Recrutadora',company:'Empresa fictícia',roleTitle:'Atendimento',instructions:'Conversa inicial sobre a oportunidade.'};
+const candidates=[{id:'a',name:'Ana Pereira'},{id:'b',name:'Beatriz Silva'},{id:'c',name:'Carla Santos'},{id:'d',name:'Diana Lima'}];
+const record={...emptyRecord('a','j'),status:'Respondeu',notes:'Nota importante',report:'Parecer revisado',reportNeedsReview:true,appointments:[],interview:undefined};
+const data={jobs:[{id:'j'},{id:'other'}],candidates,records:[record,{...emptyRecord('a','other'),notes:'Outra vaga'}]};
+test('bulk shortlist is per job, preserves records and is idempotent',()=>{
+ const result=applyCandidateBatch(data,'j',['a','b'],'shortlist',undefined,at);
+ assert.equal(result.summary.changed,2);assert.equal(result.records.length,3);
+ const updated=result.records.find(r=>r.candidateId==='a'&&r.jobId==='j');
+ for(const key of ['status','notes','report','reportNeedsReview','appointments','interview','interest','availability'])assert.deepEqual(updated[key],record[key]);
+ assert.equal(updated.shortlisted,true);assert.equal(data.records[0].shortlisted,undefined);
+ assert.equal(result.records.find(r=>r.jobId==='other'),data.records[1]);
+ const again=applyCandidateBatch({...data,records:result.records},'j',['a','b'],'shortlist',undefined,at);
+ assert.deepEqual(again.summary,{changed:0,blocked:0,existing:2});assert.deepEqual(again.records,result.records);
+});
+test('individual drafts preserve edited invitations, respect do-not-contact and do not advance stages',()=>{
+ const saved={...emptyRecord('c','j'),invitation:{message:'Texto editado manualmente'}};
+ const input={...data,records:[...data.records,{...emptyRecord('b','j'),status:'Não contatar'},saved]};
+ const result=applyCandidateBatch(input,'j',['a','b','c','d'],'invitations',settings,at);
+ assert.deepEqual(result.summary,{changed:2,blocked:1,existing:1});
+ assert.equal(result.records.find(r=>r.candidateId==='c'),saved);
+ assert.equal(result.records.find(r=>r.candidateId==='b').invitation,undefined);
+ const a=result.records.find(r=>r.candidateId==='a'&&r.jobId==='j'),d=result.records.find(r=>r.candidateId==='d');
+ assert.match(a.invitation.emailBody,/Olá, Ana!/);assert.match(d.invitation.message,/Olá, Diana!/);
+ assert.equal(a.status,'Respondeu');assert.equal(d.status,'Não contatado');assert.equal(a.notes,record.notes);
+ assert.equal(a.invitation.date,'');assert.equal(a.invitation.time,'');assert.equal(a.appointments.length,0);
+ assert.equal(recordSchema.parse(a).invitation.updated,at);
+ const again=applyCandidateBatch({...input,records:result.records},'j',['a','b','c','d'],'invitations',settings,at);
+ assert.deepEqual(again.summary,{changed:0,blocked:1,existing:3});
+});
+test('unknown, archived, repeated or excessive selections fail before any changes',()=>{
+ for(const ids of [[],['missing'],['a','a'],Array(101).fill('a')])assert.throws(()=>applyCandidateBatch(data,'j',ids,'shortlist',undefined,at));
+ assert.throws(()=>applyCandidateBatch({...data,candidates:[...candidates,{id:'archived',mergedInto:'a'}]},'j',['a','archived'],'shortlist',undefined,at));
+ assert.throws(()=>applyCandidateBatch(data,'unknown',['a'],'shortlist',undefined,at));
+ assert.throws(()=>applyCandidateBatch(data,'j',['a'],'invitations',{...settings,recruiter:' '},at));
+ assert.equal(data.records[0].events.length,0);
+});

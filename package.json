@@ -9,7 +9,7 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint app lib/supabase lib/server.ts lib/claude.ts lib/domain.ts lib/validation.ts lib/candidate-search.ts lib/contact-board.ts lib/pt-br.ts lib/report-presentation.ts lib/interview-invitation.ts lib/interview-guide.ts lib/interview-agenda.ts lib/candidate-update.ts lib/pdf-import.ts lib/pdf-extraction.ts lib/import-server.ts lib/webmcp.ts proxy.ts lib/recruitment-overview.ts lib/candidate-shortlist.ts lib/weekly-calendar.ts lib/candidate-duplicates.ts lib/import-monitor.ts",
+    "lint": "eslint app lib/supabase lib/server.ts lib/claude.ts lib/domain.ts lib/validation.ts lib/candidate-search.ts lib/contact-board.ts lib/pt-br.ts lib/report-presentation.ts lib/interview-invitation.ts lib/interview-guide.ts lib/interview-agenda.ts lib/candidate-update.ts lib/pdf-import.ts lib/pdf-extraction.ts lib/import-server.ts lib/webmcp.ts proxy.ts lib/recruitment-overview.ts lib/candidate-shortlist.ts lib/weekly-calendar.ts lib/candidate-duplicates.ts lib/import-monitor.ts lib/candidate-batch.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
