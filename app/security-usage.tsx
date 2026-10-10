@@ -15,6 +15,7 @@ async function fetchSnapshot(signal:AbortSignal):Promise<Snapshot>{
 export default function SecurityUsage({open,onOpenChange,connected}:{open:boolean;onOpenChange:(open:boolean)=>void;connected:boolean}){
  const [snapshot,setSnapshot]=useState<Snapshot|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[exporting,setExporting]=useState(false),[notice,setNotice]=useState('');
  const mounted=useRef(false),activeRequest=useRef<AbortController|null>(null),exportRequest=useRef<AbortController|null>(null),exportLock=useRef(false);
+ const titleRef=useRef<HTMLHeadingElement|null>(null);
  const load=useCallback((signal:AbortSignal)=>{
   void fetchSnapshot(signal).then(value=>{if(!signal.aborted)setSnapshot(value);}).catch(e=>{if(!signal.aborted)setError(e instanceof Error?e.message:'Não foi possível consultar o uso.');}).finally(()=>{if(!signal.aborted)setLoading(false);});
  },[]);
@@ -38,7 +39,7 @@ export default function SecurityUsage({open,onOpenChange,connected}:{open:boolea
   finally{exportLock.current=false;setExporting(false);}
  }
  const primary=snapshot?.limits.filter(l=>l.bucket==='ai-call'||l.bucket==='ai-request'||l.bucket==='upload')||[];
- return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="security-dialog"><DialogHeader><DialogTitle>Segurança e uso</DialogTitle><DialogDescription>Acompanhe os limites da sua conta e cuide da sua base de talentos.</DialogDescription></DialogHeader>
+ return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="security-dialog" onOpenAutoFocus={event=>{event.preventDefault();titleRef.current?.focus({preventScroll:true});}}><DialogHeader><DialogTitle ref={titleRef} tabIndex={-1} className="outline-none">Segurança e uso</DialogTitle><DialogDescription>Acompanhe os limites da sua conta e cuide da sua base de talentos.</DialogDescription></DialogHeader>
   <section className="security-protection"><ShieldCheck size={22}/><div><h2>Seu espaço é privado</h2><p>Currículos e registros ficam associados à sua conta. Os limites de uso são verificados no servidor.</p></div></section>
   <section aria-labelledby="usage-heading"><div className="security-section-heading"><h2 id="usage-heading"><Sparkles size={18}/>Uso da Talentia</h2><Button variant="outline" onClick={refresh} disabled={!connected||loading}><RefreshCw size={16}/>{loading?'Consultando…':'Atualizar uso'}</Button></div>
    {!connected?<p role="status">Aguarde seu espaço carregar para consultar o uso.</p>:error?<p role="alert" className="security-feedback">{error}</p>:!snapshot?<p role="status">Consultando os limites da sua conta…</p>:<>
