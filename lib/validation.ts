@@ -13,3 +13,6 @@ export function assertFairCriteria(criteria:{text:string}[]){const forbidden=/\b
 export function professionalText(text:string){return text.split('\n').filter(line=>!/^\s*(idade|sexo|estado civil|data de nascimento|nascimento|endere[cç]o|cep|telefone|e-?mail)\s*:/i.test(line)).join('\n');}
 
 export const candidateEditSchema=z.object({candidateId:z.string().uuid(),version:z.number().int().positive(),changes:z.object({name:z.string().trim().min(1).max(200),role:z.string().trim().max(300),city:z.string().trim().max(300),phone:z.string().trim().max(100),email:z.union([z.literal(''),z.string().email().max(300)]),text:z.string().trim().min(30).max(80000)}),confirmedFields:z.array(z.enum(['phone','email','city'])).max(3),method:z.enum(['WhatsApp','Telefone','E-mail','Entrevista','Outro'])});
+
+export const candidateMergeSchema=z.object({primaryId:z.string().uuid(),secondaryId:z.string().uuid(),version:z.number().int().positive(),confirmed:z.literal(true),choices:z.object({name:z.enum(['primary','secondary']),role:z.enum(['primary','secondary']),city:z.enum(['primary','secondary']),phone:z.enum(['primary','secondary']),email:z.enum(['primary','secondary']),text:z.enum(['primary','secondary'])})});
+export const candidateRestoreSchema=z.object({candidateId:z.string().uuid(),version:z.number().int().positive()});
