@@ -50,6 +50,8 @@ function mergeRecords(primary:RecordData,secondary:RecordData,source:Candidate,a
   availability:primary.availability==='Não confirmada'?secondary.availability:primary.availability,
   notes,report,reportNeedsReview:Boolean(report),shortlisted:Boolean(primary.shortlisted||secondary.shortlisted),
   invitation:primary.invitation||secondary.invitation,
+  followUp:primary.followUp&&!primary.followUp.completedAt?primary.followUp:secondary.followUp&&!secondary.followUp.completedAt?secondary.followUp:primary.followUp||secondary.followUp,
+  lastContactAt:[primary.lastContactAt,secondary.lastContactAt].filter(Boolean).sort().at(-1),
   interview:items.length?{...(primary.interview||secondary.interview!),items,updated:at}:undefined,
   appointments,events};
 }

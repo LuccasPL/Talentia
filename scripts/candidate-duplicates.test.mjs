@@ -5,6 +5,12 @@ import {emptyRecord} from '../lib/domain.ts';
 const profile=(id,extra={})=>({id,name:'Pessoa Fictícia Teste',role:'Atendimento',city:'São Paulo',phone:'',email:'',text:'Experiência fictícia com atendimento em loja e recepção.',source:`CV ${id}.pdf`,fileKey:`owner/${id}.pdf`,updated:'2026-10-10T10:00:00.000Z',demo:false,...extra});
 const primary=profile('a',{phone:'(11) 91234-5678',email:'PESSOA@example.invalid',verification:{phone:{at:'old',method:'Telefone'}}}),secondary=profile('b',{name:'Pessoa Ficticia Teste',phone:'+55 11 91234-5678',email:'pessoa@example.invalid'});
 const data=()=>({candidates:[primary,secondary],jobs:[{id:'job',analyses:[{candidateId:'a',evidence:[]},{candidateId:'b',evidence:[]}]}],records:[],aiConfigured:true,version:1});
+
+test('merging preserves a pending follow-up over a completed one and the latest registered contact',()=>{
+ const input=data();input.records=[{...emptyRecord('a','job'),lastContactAt:'2026-10-09T15:00:00.000Z',followUp:{date:'2026-10-09',note:'Concluído',updated:'2026-10-09T15:00:00.000Z',completedAt:'2026-10-09T15:00:00.000Z'}},{...emptyRecord('b','job'),lastContactAt:'2026-10-10T15:00:00.000Z',followUp:{date:'2026-10-12',note:'Retomar contato',updated:'2026-10-10T15:00:00.000Z'}}];
+ const output=mergeCandidateData(input,'a','b',defaultMergeChoices,'2026-10-10T18:00:00.000Z');
+ const record=output.records.find(r=>r.candidateId==='a');assert.equal(record.followUp.note,'Retomar contato');assert.equal(record.followUp.completedAt,undefined);assert.equal(record.lastContactAt,'2026-10-10T15:00:00.000Z');assert.equal(output.records.find(r=>r.candidateId==='b').followUp.note,'Retomar contato');
+});
 test('duplicate signals normalize accents and Brazilian phone prefixes without treating empty contacts as evidence',()=>{
  const result=duplicatePairs([primary,secondary]);assert.equal(result.pairs.length,1);assert.deepEqual(new Set(result.pairs[0].reasons),new Set(['Nome completo igual','Telefone igual','E-mail igual']));
  assert.equal(duplicatePairs([profile('x',{name:'Ana Lima'}),profile('y',{name:'Bia Santos'})]).pairs.length,0);

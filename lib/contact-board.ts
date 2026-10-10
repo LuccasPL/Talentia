@@ -16,5 +16,5 @@ export function filterContactItems(items:ContactItem[],query:string,status:strin
 }
 export function approachRecord(record:RecordData,at:string):RecordData{
  if(record.status!=='Não contatado')throw Error('A etapa deste contato mudou. Atualize a página antes de registrar a abordagem.');
- return {...record,status:'Contato realizado',events:[...record.events,{at,text:'Abordagem registrada pela recrutadora · Aguardando retorno'}]};
+ return {...record,status:'Contato realizado',lastContactAt:at,events:[...record.events,{at,text:'Abordagem registrada pela recrutadora · Aguardando retorno'}]};
 }

@@ -1,11 +1,12 @@
 import {interviewSummary,type InterviewGuide} from './interview-guide.ts';
 import type {Appointment} from './interview-agenda';
+import type {FollowUp} from './contact-follow-up';
 import type {InterviewInvitation} from './interview-invitation';
 export type Criterion={id:string;text:string;kind:'experiencia'|'condicao'|'entrevista';priority:'obrigatorio'|'diferencial'|'confirmar'};
 export type Candidate={id:string;name:string;role:string;city:string;source:string;text:string;phone:string;email:string;updated:string;demo:boolean;originalText?:string;editedAt?:string;verification?:Partial<Record<'phone'|'email'|'city',{at:string;method:string}>>;changeLog?:{at:string;fields:string[];confirmed:string[];method:string}[];fileKey?:string;mergedInto?:string;mergedAt?:string;cvSourceId?:string;mergeHistory?:{at:string;candidate:Candidate;records:RecordData[];analyses:{jobId:string;analysis:Analysis}[]}[]};
 export type Evidence={criterionId:string;status:'encontrada'|'confirmar';quote:string;explanation:string;question:string};
 export type Analysis={candidateId:string;evidence:Evidence[]};
-export type RecordData={candidateId:string;jobId:string;status:string;interest:string;availability:string;notes:string;report:string;reportNeedsReview?:boolean;shortlisted?:boolean;invitation?:InterviewInvitation;interview?:InterviewGuide;appointments?:Appointment[];events:{at:string;text:string}[]};
+export type RecordData={candidateId:string;jobId:string;status:string;interest:string;availability:string;notes:string;report:string;lastContactAt?:string;followUp?:FollowUp;reportNeedsReview?:boolean;shortlisted?:boolean;invitation?:InterviewInvitation;interview?:InterviewGuide;appointments?:Appointment[];events:{at:string;text:string}[]};
 export type Job={id:string;title:string;description:string;criteria:Criterion[];analyses:Analysis[];stage:number;engine:string;revision:number;updated:string};
 export type Data={jobs:Job[];candidates:Candidate[];archivedCandidates?:Candidate[];records:RecordData[];aiConfigured:boolean;version?:number};
 export const sampleBrief='Procuro uma pessoa para atendimento em uma loja conceito na Avenida Paulista, São Paulo. Precisa de experiência com hospitalidade e varejo, além de disponibilidade para escala 6x1. Vai acolher clientes, vender e demonstrar produtos. É importante ter boa comunicação, curiosidade para aprender e colaboração com a equipe. Deve estar confortável atendendo públicos diversos.';

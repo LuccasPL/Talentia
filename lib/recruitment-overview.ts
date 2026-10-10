@@ -1,4 +1,4 @@
-import type {Data,RecordData} from './domain';
+import {emptyRecord,type Data,type RecordData} from './domain.ts';
 import {agendaItems,filterAgenda} from './interview-agenda.ts';
 export function recruitmentOverview(data:Data,jobId:string,now:number){
  const jobs=data.jobs.filter(j=>jobId==='all'||j.id===jobId),people=new Map(data.candidates.map(c=>[c.id,c]));
@@ -6,7 +6,7 @@ export function recruitmentOverview(data:Data,jobId:string,now:number){
  const items=jobs.flatMap(job=>{
   const ids=new Set([...job.analyses.map(a=>a.candidateId),...data.records.filter(r=>r.jobId===job.id).map(r=>r.candidateId)]);
   return [...ids].flatMap(id=>{const candidate=people.get(id);if(!candidate)return [];
-   const record:RecordData=records.get(`${job.id}:${id}`)||{candidateId:id,jobId:job.id,status:'NÃ£o contatado',interest:'NÃ£o confirmado',availability:'NÃ£o confirmada',notes:'',report:'',events:[]};
+   const record:RecordData=records.get(`${job.id}:${id}`)||emptyRecord(id,job.id);
    return [{candidate,job,record}];
   });
  }).sort((a,b)=>a.candidate.name.localeCompare(b.candidate.name,'pt-BR')||a.job.title.localeCompare(b.job.title,'pt-BR'));
