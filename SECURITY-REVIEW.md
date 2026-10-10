@@ -26,6 +26,7 @@ As janelas são fixas, calculadas no servidor. Ao esgotar um limite, a API retor
 | Consultar histórico de importações | 30/minuto |
 | Conferir processamento de importações | 6/minuto |
 | Enviar/repetir importações de PDFs | 30/minuto |
+| Exportar dados cadastrais em CSV | 2/minuto |
 | Pedir critérios/comparações | 6 a cada 10 minutos |
 | Chamadas pagas ao Claude, incluindo extração de PDF | 60/hora e 200/dia, compartilhado |
 
@@ -49,3 +50,9 @@ Uma comparação de 100 candidatos usa até 20 chamadas ao Claude; cada lote e c
 - Distribuição de ataques entre vários IPs, credenciais roubadas, comprometimento de contas administrativas e falhas futuras exigem outras camadas. Próximos passos úteis: MFA para administração e usuários, revisão de recuperação/backups e orçamento/alertas de uso na Anthropic. Não houve alteração dessas contas ou aquisição de serviços.
 
 Referências de implementação: [CSP no Next.js](https://nextjs.org/docs/app/guides/content-security-policy), [rate limiting da Vercel](https://vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting), [funções e permissões do Supabase](https://supabase.com/docs/guides/database/functions).
+
+## Incremento: painel de uso e CSV
+
+O painel consulta uma função privada que deriva o proprietário de `auth.uid()`, sem parâmetro de conta, usando `search_path` vazio. O wrapper público é invoker e não permite execução anônima. Consultar o snapshot não altera quotas. Os testes transacionais confirmaram as nove janelas, renovação futura, contadores isolados e limite de exportação.
+
+A exportação usa sessão e RLS, projeção restrita dos campos, validação de origem, resposta sem cache e limite próprio. Textos iniciados por fórmulas, inclusive após espaços e caracteres de controle, são tratados como texto no CSV. Foram aprovados 76 testes automatizados, incluindo acentos, datas de Brasília, campos omitidos, respostas inválidas e limites compartilhados de IA. O CSV contém dados pessoais cadastrais e deve ser guardado com o mesmo cuidado da base.

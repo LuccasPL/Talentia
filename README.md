@@ -64,3 +64,9 @@ As estrelas do banco de talentos e a ação no perfil permitem marcar candidatos
 # Calendário semanal da agenda
 
 A agenda abre na visão Semana, de segunda a domingo, no fuso de Brasília. Os eventos aparecem por horário e duração, com cores e texto para as situações. Há navegação por semana, retorno à semana atual e escolha de uma data; busca, vaga e situação filtram o calendário. Eventos que atravessam a meia-noite aparecem em ambos os dias, e sobreposições são exibidas lado a lado. O horário visível se expande para incluir entrevistas fora de 8h–20h. Clicar em um evento permite abrir o roteiro ou editar o agendamento já salvo. A visão Lista e seus filtros anteriores permanecem disponíveis. É uma visualização dos dados privados da Talentia, sem integração com Google Calendar, novos envios ou chamadas de IA.
+
+## Segurança, uso e exportação
+
+O botão Segurança e uso, também acessível por Meu espaço, consulta os contadores da própria conta sem consumir chamadas à IA. Mostra limites por hora/dia, saldo de tentativas e renovação no horário de Brasília; Atualizar uso refaz a consulta. São limites de quantidade, não um orçamento financeiro nem uma medição em tempo real. O endpoint exige autenticação e limita consultas.
+
+Baixar candidatos em CSV exporta apenas dados cadastrais dos perfis ativos: identificação, nome, cargo, cidade informada, telefone, e-mail, origem e datas de importação/confirmação. Não inclui PDFs, textos de currículos, entrevistas nem pareceres, e não substitui um backup completo. O arquivo usa UTF-8 com BOM, separador ponto e vírgula e proteção contra fórmulas de planilha. A API consulta somente os campos exportáveis da conta autenticada, exige mesma origem, limita a duas tentativas por minuto e recusa bases com 10 mil registros ou arquivos acima de 4 MiB. O download não altera candidatos nem envia mensagens.
