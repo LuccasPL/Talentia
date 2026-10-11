@@ -1,0 +1,12 @@
+'use client';
+import {useEffect,useState} from 'react';
+import {Button} from '@/components/ui/button';
+import type {Data} from '@/lib/domain';
+import type {RefreshLink} from '@/lib/candidate-refresh';
+import {brazilDate} from '@/lib/pt-br';
+export default function CandidateUpdates({data,onOpen}:{data:Data;onOpen:(candidateId:string,jobId:string)=>void}){
+ const [links,setLinks]=useState<RefreshLink[]>([]),[error,setError]=useState(''),[busy,setBusy]=useState(true);
+ useEffect(()=>{const abort=new AbortController();fetch('/api/candidate-refresh',{signal:abort.signal}).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error);setLinks(d.links)}).catch(e=>{if(e.name!=='AbortError')setError(e.message)}).finally(()=>{if(!abort.signal.aborted)setBusy(false)});return()=>abort.abort()},[]);
+ async function reload(){setBusy(true);setError('');try{const r=await fetch('/api/candidate-refresh');const d=await r.json();if(!r.ok)throw Error(d.error);setLinks(d.links)}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
+ return <section className="panel updates-inbox"><div className="section-header"><div><h2>Respostas que merecem seu olhar</h2><p className="muted">Dados declarados pelos candidatos via link, aguardando sua revisão. Nenhuma resposta altera o cadastro automaticamente.</p></div><Button variant="outline" disabled={busy} onClick={()=>void reload()}>{busy?'Carregando…':'Atualizar respostas'}</Button></div>{error&&<p role="alert" className="notice">{error}</p>}{!busy&&!error&&!links.length&&<div className="empty-panel"><h3>Nenhuma atualização pendente.</h3><p>Crie um link na aba Dados de um candidato e envie a mensagem pelo canal que preferir.</p></div>}{links.map(link=>{const c=data.candidates.find(c=>c.id===link.candidate_id);return <article key={link.id} className="refresh-response"><strong>{c?.name||'Perfil indisponível ou unificado'}</strong><p>{link.context.title} · Respondido em {brazilDate(link.submitted_at!,true)} (Brasília)</p><p>Interesse: {link.response?.interest} · Condições: {link.response?.conditions}</p>{link.response?.allowContact===false&&<p className="notice">A pessoa pediu para não receber novos contatos sobre esta oportunidade.</p>}<Button variant="outline" disabled={!c||!data.jobs.some(j=>j.id===link.job_id)} onClick={()=>onOpen(link.candidate_id,link.job_id)}>Abrir dados e revisar resposta</Button></article>})}{links.length===100&&<p className="notice">Exibindo até 100 respostas pendentes. Revise estes pedidos e atualize a lista para ver os próximos.</p>}</section>;
+}

@@ -1,0 +1,42 @@
+-- Run inside BEGIN/ROLLBACK. Fixtures never survive this test.
+do $$
+declare uid uuid; cid uuid:=gen_random_uuid(); jid text:=gen_random_uuid()::text; issued jsonb; token text; payload jsonb; jobs jsonb; version integer; result jsonb; answer jsonb;
+begin
+ select owner into uid from public.workspaces limit 1;
+ if uid is null then raise exception 'Test needs an existing workspace';end if;
+ payload:=jsonb_build_object('id',cid,'name','Teste de segurança fictício','city','São Paulo','role','Teste','text','Experiência fictícia para teste de segurança.','phone','','email','','source','Teste','updated','2026-10-11','demo',false);
+ insert into public.candidates(owner,id,name,payload) values(uid,cid,'Teste de segurança fictício',payload);
+ update public.workspaces w set jobs=w.jobs||jsonb_build_array(jsonb_build_object('id',jid,'title','Vaga fictícia de teste','conditions',jsonb_build_object('schedule','6x1'))) where owner=uid;
+ perform set_config('request.jwt.claim.sub',uid::text,true);
+ set local role authenticated;
+ issued:=public.issue_candidate_refresh(cid,jid,'Recrutadora de teste',3); token:=issued->>'token';
+ if length(token)<>64 then raise exception 'Invalid token';end if;
+ begin perform token_hash from public.candidate_refresh_links;raise exception 'Token hash exposed';exception when insufficient_privilege then null;end;
+ perform set_config('request.jwt.claim.sub',gen_random_uuid()::text,true);
+ if exists(select 1 from public.candidate_refresh_links) then raise exception 'Other owner can read links';end if;
+ begin perform public.issue_candidate_refresh(cid,jid,'Teste',3);raise exception 'Other owner can issue link';exception when raise_exception then if sqlerrm='Other owner can issue link' then raise;end if;end;
+ set local role anon;perform set_config('request.jwt.claim.sub','',true);
+ begin perform id from public.candidate_refresh_links;raise exception 'Anonymous table access';exception when insufficient_privilege then null;end;
+ if public.access_candidate_refresh(repeat('0',64)) is not null then raise exception 'Invalid token accepted';end if;
+ result:=public.access_candidate_refresh(token);
+ if result->'context'->>'title'<>'Vaga fictícia de teste' or result::text like '%Teste de segurança fictício%' or result::text like '%phone%' then raise exception 'Public context leaked personal data';end if;
+ answer:=jsonb_build_object('phone','11999999999','email','','city','São Paulo','employment','Prefiro não informar','interest','Interessado','availability','A combinar','conditions','Preciso esclarecer','question','','allowContact',true,'acknowledged',true);
+ if (public.access_candidate_refresh(token,answer)->>'received')::boolean is distinct from true then raise exception 'Response failed';end if;
+ if public.access_candidate_refresh(token,answer) is not null then raise exception 'Token replay accepted';end if;
+ set local role authenticated;perform set_config('request.jwt.claim.sub',uid::text,true);
+ select w.version,w.jobs into version,jobs from public.workspaces w where owner=uid;
+ if public.review_candidate_refresh((issued->>'id')::uuid,version+1,payload,jobs,'[]',false) then raise exception 'Stale review accepted';end if;
+ payload:=payload||jsonb_build_object('originalText',payload->>'text','city','Cidade atualizada');
+ if not public.review_candidate_refresh((issued->>'id')::uuid,version,payload,jobs,'[]',false) then raise exception 'Review failed';end if;
+ if public.review_candidate_refresh((issued->>'id')::uuid,version+1,payload,jobs,'[]',false) then raise exception 'Review replay accepted';end if;
+ issued:=public.issue_candidate_refresh(cid,jid,'Teste',3);
+ perform public.revoke_candidate_refresh((issued->>'id')::uuid);
+ set local role anon;perform set_config('request.jwt.claim.sub','',true);
+ if public.access_candidate_refresh(issued->>'token') is not null then raise exception 'Revoked link accepted';end if;
+ set local role postgres;perform set_config('request.jwt.claim.sub',uid::text,true);
+ issued:=public.issue_candidate_refresh(cid,jid,'Teste',3);
+ update public.candidate_refresh_links set expires_at=now()-interval '1 second' where id=(issued->>'id')::uuid;
+ set local role anon;perform set_config('request.jwt.claim.sub','',true);
+ if public.access_candidate_refresh(issued->>'token') is not null then raise exception 'Expired link accepted';end if;
+ set local role postgres;
+end;$$;
