@@ -1,3 +1,4 @@
+import type {Client} from './clients';
 import type {SavedSearch} from './assisted-search';
 import {interviewSummary,type InterviewGuide} from './interview-guide.ts';
 import type {Appointment} from './interview-agenda';
@@ -10,8 +11,8 @@ export type Candidate={id:string;name:string;role:string;city:string;source:stri
 export type Evidence={criterionId:string;status:'encontrada'|'confirmar';quote:string;explanation:string;question:string};
 export type Analysis={candidateId:string;evidence:Evidence[]};
 export type RecordData={candidateId:string;jobId:string;status:string;interest:string;availability:string;notes:string;report:string;lastContactAt?:string;followUp?:FollowUp;conditionsResponse?:{at:string;answer:string;question:string;snapshot:JobConditions};reportNeedsReview?:boolean;shortlisted?:boolean;invitation?:InterviewInvitation;interview?:InterviewGuide;appointments?:Appointment[];events:{at:string;text:string}[]};
-export type Job={id:string;title:string;description:string;conditions?:JobConditions;savedSearches?:SavedSearch[];criteria:Criterion[];analyses:Analysis[];stage:number;engine:string;revision:number;updated:string};
-export type Data={jobs:Job[];candidates:Candidate[];archivedCandidates?:Candidate[];records:RecordData[];aiConfigured:boolean;version?:number};
+export type Job={id:string;title:string;description:string;conditions?:JobConditions;clientId?:string;savedSearches?:SavedSearch[];criteria:Criterion[];analyses:Analysis[];stage:number;engine:string;revision:number;updated:string};
+export type Data={clients?:Client[];jobs:Job[];candidates:Candidate[];archivedCandidates?:Candidate[];records:RecordData[];aiConfigured:boolean;version?:number};
 export const sampleBrief='Procuro uma pessoa para atendimento em uma loja conceito na Avenida Paulista, São Paulo. Precisa de experiência com hospitalidade e varejo, além de disponibilidade para escala 6x1. Vai acolher clientes, vender e demonstrar produtos. É importante ter boa comunicação, curiosidade para aprender e colaboração com a equipe. Deve estar confortável atendendo públicos diversos.';
 export const kindLabels={experiencia:'Experiência',condicao:'Condição da vaga',entrevista:'Avaliar em entrevista'};
 export const priorityLabels={obrigatorio:'Obrigatório',diferencial:'Diferencial',confirmar:'A definir'};

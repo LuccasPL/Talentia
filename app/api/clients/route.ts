@@ -1,0 +1,5 @@
+import {z} from 'zod';
+import {clientsSchema,validateClientChanges} from '@/lib/clients';
+import {owner,readData,database,checkOrigin,readJson,apiError,HttpError} from '@/lib/server';
+import {enforceRateLimit} from '@/lib/rate-limit';
+export async function POST(request:Request){try{checkOrigin(request);const id=await owner();await enforceRateLimit('write');const input=z.object({clients:clientsSchema,version:z.number().int().positive()}).parse(await readJson(request,2097152));const current=await readData(id);try{validateClientChanges(current.clients||[],input.clients)}catch(e){throw new HttpError((e as Error).message)}const {data,error}=await (await database()).rpc('save_clients',{expected_version:input.version,new_clients:input.clients});if(error)throw new HttpError('Não foi possível salvar os clientes.',503);if(!data)throw new HttpError('Este espaço mudou em outra sessão. Recarregue antes de salvar.',409);return Response.json(await readData(id),{headers:{'Cache-Control':'no-store'}})}catch(e){return apiError(e)}}

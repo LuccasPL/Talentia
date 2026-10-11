@@ -1,0 +1,10 @@
+import {z} from 'zod';
+import type {Data,Job} from './domain';
+import {normalizeSearch} from './assisted-search.ts';
+export const clientSchema=z.object({id:z.string().uuid(),name:z.string().trim().min(2).max(200),contact:z.string().trim().max(200),email:z.union([z.literal(''),z.string().trim().email().max(300)]),phone:z.string().trim().max(100),notes:z.string().trim().max(5000),archived:z.boolean(),updated:z.string().datetime()});
+export type Client=z.infer<typeof clientSchema>;
+export const clientsSchema=z.array(clientSchema).max(300).superRefine((clients,ctx)=>{if(new Set(clients.map(c=>c.id)).size!==clients.length)ctx.addIssue({code:z.ZodIssueCode.custom,message:'Clientes duplicados.'})});
+export function validateClientChanges(current:Client[],input:unknown):Client[]{const next=clientsSchema.parse(input);if(current.some(c=>!next.some(n=>n.id===c.id)))throw Error('Arquive o cliente para preservar o histórico das vagas.');return next}
+export function assertJobClients(jobs:Job[],clients:Client[]){if(jobs.some(j=>j.clientId&&!clients.some(c=>c.id===j.clientId)))throw Error('Escolha um cliente cadastrado no seu espaço.');}
+export function filterClients(clients:Client[],query:string,status:'active'|'archived'|'all'){const terms=normalizeSearch(query).split(' ').filter(Boolean);return clients.filter(c=>(status==='all'||c.archived===(status==='archived'))&&terms.every(t=>normalizeSearch([c.name,c.contact,c.email,c.phone].join(' ')).includes(t))).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));}
+export function clientSummary(data:Data,id:string){const jobs=data.jobs.filter(j=>j.clientId===id),ids=new Set(jobs.map(j=>j.id)),candidateIds=new Set(data.candidates.map(c=>c.id));const records=data.records.filter(r=>ids.has(r.jobId)&&candidateIds.has(r.candidateId));return {jobs,shortlisted:new Set(records.filter(r=>r.shortlisted).map(r=>`${r.jobId}:${r.candidateId}`)).size,reports:records.filter(r=>r.report.trim()&&!r.reportNeedsReview).length,reportsToReview:records.filter(r=>r.report.trim()&&r.reportNeedsReview).length,selected:records.filter(r=>r.status==='Selecionado').length};}
