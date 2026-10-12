@@ -152,3 +152,9 @@ Ações em lote ficam recolhidas inicialmente e se abrem quando há perfis selec
 Na tela de vagas, as três etapas têm indicação acessível da etapa atual e orientação para o próximo passo. Cliente e condições ficam recolhidos; os botões de salvar aparecem junto dos respectivos campos. As condições preservam o texto livre e os controles existentes. A busca distingue base vazia de filtros sem resultados e oferece a ação correspondente. Não há gravação ao expandir esses detalhes.
 
 Cartões de candidatos destacam pendências de contato e interesse, recolhem datas e confirmações e diferenciam trechos ainda não comparados das evidências de uma comparação. Contato abre diretamente a seção existente do perfil, sem enviar mensagens ou alterar registros. Ações têm nomes acessíveis com o nome do candidato e áreas de toque adaptadas ao celular.
+
+## Comparação lado a lado
+
+Lista de interesse permite escolher de dois a três perfis da mesma vaga para revisão lado a lado. A seleção é temporária, preserva a ordem de escolha e é reiniciada ao trocar a vaga. Busca e páginas de 24 permitem localizar perfis em listas grandes; filtrar não retira os escolhidos, e remover alguém da lista invalida sua participação na comparação.
+
+A tabela reúne cidade informada, etapa, interesse, disponibilidade, situação do parecer e critérios atuais com trechos, explicações e perguntas já salvos. Ausência de análise aparece como Ainda não comparado; ausência de trecho fica A confirmar. Condições e características de entrevista continuam A confirmar mesmo quando a análise contém uma menção. Não há pontuação, ordenação por contratação, nova chamada à IA, alteração de dados, impressão ou compartilhamento externo. Abrir perfil mantém o contexto da vaga. Textos são renderizados literalmente. No celular, somente a tabela tem rolagem horizontal.
