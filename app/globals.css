@@ -133,4 +133,26 @@ body{background:var(--background);color:var(--foreground)}
 .job-client-details .text-input{width:100%}
 .empty-panel>svg{margin-inline:auto;color:#82516d}
 .empty-panel p{max-width:460px;margin-inline:auto;line-height:1.8}
+.candidate-card{display:flex;flex-direction:column;min-width:0}
+.candidate-card .candidate-role{line-height:1.6;margin-bottom:10px}
+.candidate-card .candidate-meta{align-items:flex-start;line-height:1.6}
+.candidate-card .candidate-meta svg{flex-shrink:0;margin-top:3px}
+.candidate-data-note>summary{display:flex;align-items:center;gap:8px;min-height:40px;cursor:pointer;list-style:none;font-size:12px;color:#776b76}
+.candidate-data-note>summary::-webkit-details-marker{display:none}
+.candidate-data-note>summary:focus-visible{outline:2px solid #82516d;outline-offset:2px;border-radius:6px}
+.candidate-data-note[open]>summary svg{transform:rotate(90deg)}
+.candidate-data-note>div{display:flex;flex-direction:column;gap:5px;padding:10px 12px;background:#faf6f8;border-radius:8px;font-size:12px;line-height:1.6}
+.candidate-pending-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.candidate-pending-tags>span{font-size:11px;line-height:1.5;padding:5px 8px;background:#f6f0e8;color:#795d35;border-radius:7px}
+.candidate-excerpt-label{font-size:11px;color:#776b76;letter-spacing:.02em;display:block;margin:12px 0 4px}
+.candidate-card .candidate-excerpt{line-height:1.8;margin-top:6px;overflow-wrap:anywhere}
+.candidate-card .candidate-evidence{color:#70445d}
+.candidate-card .candidate-card-bottom{margin-top:auto;padding-top:18px;flex-wrap:wrap;gap:12px}
+.candidate-card-bottom>span{font-size:12px;display:flex;align-items:center;gap:6px}
+.candidate-card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.candidate-card-actions>button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:8px 10px;border:1px solid #e9dfe5;border-radius:9px;color:#70445d;background:white;font-size:12px}
+.candidate-card-actions>button:last-child{background:#f4eaf0;border-color:#e3cfda}
+.candidate-card-actions>button:hover{background:#ecdbe5}
+.candidate-card-actions>button:focus-visible{outline:2px solid #82516d;outline-offset:2px}
+@media(max-width:767px){.candidate-card-actions{width:100%;margin-left:0}.candidate-card-actions>button{flex:1;min-height:44px}.candidate-data-note>summary{min-height:44px}}
 @media(max-width:767px){.job-flow{padding:18px 16px}.job-flow ol{gap:8px}.job-flow li{flex-direction:column;align-items:flex-start;font-size:12px;line-height:1.5;gap:8px}.job-flow-number{flex-basis:30px;width:30px}.job-flow p{font-size:12px;margin-top:14px;padding-top:14px}.job-client-details,.conditions-panel{padding-inline:16px}.job-client-details .client-assignment{display:flex;flex-direction:column;align-items:stretch}.job-client-details .client-assignment>div{width:100%}.job-client-details .report-actions{flex-wrap:wrap}.job-condition-actions>button{width:100%}.conditions-panel .two-fields{grid-template-columns:minmax(0,1fr)}}

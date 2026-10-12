@@ -150,3 +150,5 @@ A busca por texto continua visível, enquanto cidade, experiência, pendências 
 Ações em lote ficam recolhidas inicialmente e se abrem quando há perfis selecionados. A seleção continua limitada à vaga e aos filtros; recolher o painel não altera os registros.
 
 Na tela de vagas, as três etapas têm indicação acessível da etapa atual e orientação para o próximo passo. Cliente e condições ficam recolhidos; os botões de salvar aparecem junto dos respectivos campos. As condições preservam o texto livre e os controles existentes. A busca distingue base vazia de filtros sem resultados e oferece a ação correspondente. Não há gravação ao expandir esses detalhes.
+
+Cartões de candidatos destacam pendências de contato e interesse, recolhem datas e confirmações e diferenciam trechos ainda não comparados das evidências de uma comparação. Contato abre diretamente a seção existente do perfil, sem enviar mensagens ou alterar registros. Ações têm nomes acessíveis com o nome do candidato e áreas de toque adaptadas ao celular.
