@@ -117,3 +117,11 @@ A API exige identidade, origem local, limite de leitura e corpo limitado. Recons
 A prévia contém capa e cada perfil começando em uma página nova. O botão de impressão exige marcar a revisão do conteúdo e abre a impressão do navegador, com opção Salvar como PDF. É uma fotografia do espaço na preparação; alterações posteriores pedem recarregar. As escolhas, a introdução e a prévia são temporárias e ficam na página, sem salvar um pacote ou histórico de entrega no banco. Não há link público, portal externo, envio ao cliente, mudança de estágio ou chamada à IA. Copiar a URL da página continua exigindo o login e os dados da conta correspondente.
 
 Validação: scripts/client-presentation.test.mjs cobre 1–10 perfis, ordem, versão, isolamento, marcações de revisão, ausência de dados acessórios e preservação literal dos pareceres.
+
+## Funil visual por vaga
+
+Funil de candidatos apresenta as sete etapas existentes em colunas, usando os mesmos registros do acompanhamento. Participam apenas perfis ativos comparados ou com registros na vaga; toda a base não é inscrita automaticamente. Há busca por nome, função e cidade, filtros de lista de interesse e parecer pendente, seleção de uma coluna e exibição inicial de 20 cartões por coluna com carregamento adicional.
+
+Arrastar um cartão ou usar Alterar etapa abre a mesma confirmação manual. Encerrar ou bloquear requer motivo; contatos bloqueados precisam ser revisados no perfil antes de reativação. A alteração preserva histórico, respostas, notas, disponibilidade, lembretes e agendamentos, acrescenta um evento e sinaliza pareceres existentes para revisão. Não envia mensagens, não registra contato realizado automaticamente, não agenda ou cancela entrevistas e não chama IA. Agendamentos existentes devem ser conferidos separadamente na agenda.
+
+POST /api/pipeline exige proprietário autenticado, mesma origem, limite de gravação, corpo limitado e confirmação explícita. Reconsulta a participação e a etapa, valida a versão compartilhada e grava por save_workspace com concorrência otimista e RLS existentes. Uma atualização sem mudança de etapa não grava nem avança versão. Não há nova tabela ou migração. Validação: scripts/recruitment-pipeline.test.mjs cobre escopo, filtros, concorrência, bloqueios e preservação dos outros dados.
