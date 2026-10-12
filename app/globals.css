@@ -103,3 +103,34 @@ body{background:var(--background);color:var(--foreground)}
 .mobile-profile-section{display:none}@media(max-width:767px){.mobile-profile-section{display:block;margin-bottom:20px}.mobile-profile-section .field-label{margin-top:0}.detail-tabs>[data-slot=tabs-list]{display:none}}
 .candidate-sheet>.profile-shortlist{padding:18px 32px 0}.candidate-sheet>.profile-shortlist small{display:block;line-height:1.7;margin-top:8px}.batch-tools{margin:16px 0;border:1px solid #e9dfe5;border-radius:14px;background:#fff;padding:0 18px}.batch-tools>summary{display:flex;align-items:center;gap:10px;list-style:none;cursor:pointer;min-height:54px;font-size:14px;color:#70445d}.batch-tools>summary::-webkit-details-marker{display:none}.batch-tools>summary>span{margin-left:auto;font-size:12px;color:#776b76}.batch-tools[open]>summary>svg:last-child{transform:rotate(90deg)}.batch-tools>summary:focus-visible{outline:2px solid #82516d;outline-offset:3px}.batch-tools .candidate-batch{border:0;margin-top:0;padding-inline:0;box-shadow:none}@media(max-width:767px){.candidate-sheet>.profile-shortlist{padding:16px 16px 0}.candidate-sheet>.profile-shortlist button{height:auto;min-height:44px;white-space:normal;padding:10px 12px;text-align:left}.batch-tools{padding:0 14px}.batch-tools>summary{font-size:13px}.batch-tools>summary>span{font-size:11px;max-width:145px;text-align:right}}
 @media(min-width:768px) and (max-width:1100px){.list-toolbar{flex-wrap:wrap;gap:12px}.list-toolbar .sort-control{flex:1 1 100%;justify-content:space-between}.list-toolbar>button{margin-left:0;min-height:44px;flex:1}.candidate-pagination{flex-wrap:wrap;gap:14px}}
+
+/* Keep the next task visible while optional details stay within reach. */
+.job-flow{margin:0 0 22px;padding:22px;border:1px solid #e9dfe5;border-radius:18px;background:#fff}
+.job-flow ol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;list-style:none;margin:0;padding:0}
+.job-flow li{display:flex;align-items:center;gap:10px;font-size:14px;color:#776b76;min-width:0}
+.job-flow-number{display:flex;align-items:center;justify-content:center;flex:0 0 30px;height:30px;border-radius:50%;background:#f5f0f3;color:#776b76;font-size:13px}
+.job-flow li[aria-current=step]{color:#70445d;font-weight:600}
+.job-flow li[aria-current=step] .job-flow-number{background:#70445d;color:white}
+.job-flow li.completed .job-flow-number{background:#eef5f0;color:#377c5d}
+.job-flow p{margin:18px 0 0;padding-top:16px;border-top:1px solid #f0e9ed;font-size:13px;line-height:1.7;color:#776b76}
+.job-flow p strong{color:#70445d}
+.job-client-details{padding:0 22px;margin-bottom:14px}
+.job-client-details>summary{display:flex;align-items:center;gap:12px;min-height:72px;list-style:none;cursor:pointer;color:#70445d;font-size:14px}
+.job-client-details>summary::-webkit-details-marker{display:none}
+.job-client-details>summary>span{flex:1;min-width:0;overflow-wrap:anywhere}
+.job-client-details>summary small{display:block;font-size:12px;color:#776b76;margin-top:4px}
+.job-client-details[open]>summary>svg:last-child{transform:rotate(90deg)}
+.job-client-details>summary:focus-visible{outline:2px solid #82516d;outline-offset:3px;border-radius:8px}
+.job-client-details .client-assignment{padding:18px 0 22px;border-top:1px solid #e9dfe5;margin:0;border-radius:0;background:transparent}
+.conditions-panel{margin-bottom:22px;padding:0 22px}
+.conditions-panel .job-conditions{width:100%;min-width:0}
+.conditions-panel .job-conditions>summary{min-height:58px;display:flex;align-items:center;font-size:14px;color:#70445d;cursor:pointer;list-style:revert}
+.conditions-panel .job-conditions>summary:focus-visible{outline:2px solid #82516d;outline-offset:3px;border-radius:8px}
+.conditions-panel .job-conditions>summary::after{content:'›';margin-left:auto;font-size:22px}
+.conditions-panel .job-conditions[open]>summary::after{transform:rotate(90deg)}
+.job-condition-actions{padding:16px 0 22px;display:flex;justify-content:flex-end}
+.conditions-panel .two-fields{margin-top:18px}
+.job-client-details .text-input{width:100%}
+.empty-panel>svg{margin-inline:auto;color:#82516d}
+.empty-panel p{max-width:460px;margin-inline:auto;line-height:1.8}
+@media(max-width:767px){.job-flow{padding:18px 16px}.job-flow ol{gap:8px}.job-flow li{flex-direction:column;align-items:flex-start;font-size:12px;line-height:1.5;gap:8px}.job-flow-number{flex-basis:30px;width:30px}.job-flow p{font-size:12px;margin-top:14px;padding-top:14px}.job-client-details,.conditions-panel{padding-inline:16px}.job-client-details .client-assignment{display:flex;flex-direction:column;align-items:stretch}.job-client-details .client-assignment>div{width:100%}.job-client-details .report-actions{flex-wrap:wrap}.job-condition-actions>button{width:100%}.conditions-panel .two-fields{grid-template-columns:minmax(0,1fr)}}
