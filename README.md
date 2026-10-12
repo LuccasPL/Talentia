@@ -158,3 +158,21 @@ Cartões de candidatos destacam pendências de contato e interesse, recolhem dat
 Lista de interesse permite escolher de dois a três perfis da mesma vaga para revisão lado a lado. A seleção é temporária, preserva a ordem de escolha e é reiniciada ao trocar a vaga. Busca e páginas de 24 permitem localizar perfis em listas grandes; filtrar não retira os escolhidos, e remover alguém da lista invalida sua participação na comparação.
 
 A tabela reúne cidade informada, etapa, interesse, disponibilidade, situação do parecer e critérios atuais com trechos, explicações e perguntas já salvos. Ausência de análise aparece como Ainda não comparado; ausência de trecho fica A confirmar. Condições e características de entrevista continuam A confirmar mesmo quando a análise contém uma menção. Não há pontuação, ordenação por contratação, nova chamada à IA, alteração de dados, impressão ou compartilhamento externo. Abrir perfil mantém o contexto da vaga. Textos são renderizados literalmente. No celular, somente a tabela tem rolagem horizontal.
+
+## Diretório de vagas
+
+O menu Vagas abre uma visão de todas as oportunidades com busca por nome e cliente, filtro por etapa de preparação e ordenação por nome ou atualização registrada. Páginas de 12 cartões reúnem pessoas acompanhadas, lista de interesse, pareceres salvos sem revisão pendente e pareceres a revisar. Participações são únicas dentro de cada vaga e excluem candidatos ausentes ou unificados. Análises e registros entram na contagem sem inscrever toda a base. Clientes arquivados permanecem identificados nas vagas vinculadas.
+
+Retomar vaga, Ver funil e Lista de interesse preservam a vaga escolhida. O editor oferece Ver todas as vagas. A etapa de preparação é distinta da etapa dos candidatos e não indica vaga encerrada, entrega ou contratação. Não há arquivamento de vaga, alteração de registros, chamada de IA ou migração. Esta melhoria faz parte do pacote de atualização de 12 de outubro de 2026.
+
+## Histórico consolidado do candidato
+
+A aba Histórico no perfil reúne entrada na base, alterações e confirmações do cadastro, declaração incorporada e eventos salvos nas vagas existentes. A visão é privada, somente leitura, restrita ao candidato ativo e independente da vaga atualmente aberta. Busca textual sem distinção de acentos e filtro de origem se combinam, com ordem crescente/decrescente e páginas de 25. Datas inválidas são mantidas ao final e identificadas; horários são de Brasília. As confirmações mostram os campos e o método, sem copiar valores antigos de contato. Agendamentos futuros não viram eventos fictícios.
+
+Edições não salvas ficam fora da linha do tempo; a nova aba não navega para outra vaga, grava, envia ou chama IA. Históricos originais de perfis unificados continuam em Revisar duplicados. Não é um log imutável nem comprovação de envio/recebimento: mostra somente os registros disponíveis. Esta melhoria faz parte do pacote de atualização de 12 de outubro de 2026.
+
+## Modo entrevista
+
+Na aba Entrevista, Entrar no modo entrevista apresenta uma pergunta atual por vez com os mesmos campos editáveis do roteiro completo. Anterior, Próxima, seletor de pergunta e Próxima sem resposta permitem conduzir a conversa; o último busca adiante e depois retorna ao começo, sem selecionar novamente a pergunta atual. Digitar uma resposta não muda a pergunta automaticamente. O progresso conta somente respostas não vazias dos critérios atuais e da conversa geral, sem tratar observações como respostas.
+
+Critérios alterados/removidos ficam preservados na visão completa e não entram na sequência atual. Trocar o modo ou a pergunta preserva o mesmo rascunho. Salvar roteiro e respostas continua usando a ação existente, com indicação de alterações não salvas e botão visível durante a rolagem. Não há autosave, conclusão automática da entrevista, mudança de etapa, confirmação de interesse ou nova chamada de IA. Esta melhoria faz parte do pacote de atualização de 12 de outubro de 2026.
