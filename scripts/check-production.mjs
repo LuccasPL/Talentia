@@ -14,10 +14,12 @@ for(const path of ['/api/workspace','/api/files/00000000-0000-0000-0000-00000000
  const response=await fetch(base+path);assert.equal(response.status,401);
  const body=await response.json();assert.match(body.error,/Entre na sua conta/);
 }
-for(const path of ['/api/workspace','/api/candidates','/api/ai','/api/upload']){
+for(const path of ['/api/workspace','/api/candidates','/api/ai','/api/upload','/api/pipeline']){
  const response=await fetch(base+path,{method:'POST',headers:{Origin:'https://untrusted.example','Content-Type':'application/json'},body:'{}'});
  assert.equal(response.status,403);
 }
-const sameOrigin=await fetch(base+'/api/workspace',{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:'{}'});
-assert.equal(sameOrigin.status,401);
+for(const path of ['/api/workspace','/api/pipeline']){
+ const sameOrigin=await fetch(base+path,{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:'{}'});
+ assert.equal(sameOrigin.status,401);
+}
 console.log('Passed: public login, Supabase configured, anonymous data access blocked, cross-origin requests rejected.');
