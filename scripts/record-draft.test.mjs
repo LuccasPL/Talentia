@@ -1,0 +1,6 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {refreshRecordDraft} from '../lib/record-draft.ts';
+import {emptyRecord} from '../lib/domain.ts';
+test('server metadata after interview save cannot create a false unsaved-form state',()=>{const before=emptyRecord('c','j'),draft={...before},after={...before,reportNeedsReview:false,evaluationNeedsReview:false,triageNeedsReview:false,interview:{items:[]},events:[{at:'2026-10-14',text:'Salvo'}]};const next=refreshRecordDraft(draft,before,after);assert.deepEqual(next,after);assert.equal(JSON.stringify(next),JSON.stringify(after));assert.equal(draft.interview,undefined)});
+test('unsaved contact notes remain deliberately dirty while review flags follow server',()=>{const before=emptyRecord('c','j'),draft={...before,notes:'Texto ainda não salvo',interest:'Interessado'},after={...before,reportNeedsReview:true,evaluationNeedsReview:true,followUp:{date:'2026-10-15'}};const next=refreshRecordDraft(draft,before,after);assert.equal(next.notes,draft.notes);assert.equal(next.interest,draft.interest);assert.equal(next.reportNeedsReview,true);assert.equal(next.evaluationNeedsReview,true);assert.deepEqual(next.followUp,after.followUp)});
