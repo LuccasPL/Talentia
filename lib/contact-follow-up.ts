@@ -5,12 +5,12 @@ export function brazilDay(now:number):string{return new Intl.DateTimeFormat('en-
 export function followUpItems(data:Data,jobId:string,now:number){
  const today=brazilDay(now),candidates=new Map(data.candidates.filter(c=>!c.mergedInto).map(c=>[c.id,c])),jobs=new Map(data.jobs.map(j=>[j.id,j]));
  return data.records.flatMap(record=>{const candidate=candidates.get(record.candidateId),job=jobs.get(record.jobId),reminder=record.followUp;
-  if(!candidate||!job||(jobId!=='all'&&job.id!==jobId)||!reminder||reminder.completedAt||['Não contatar','Encerrado','Selecionado'].includes(record.status))return [];
+  if(!candidate||!job||(jobId!=='all'&&job.id!==jobId)||!reminder||reminder.completedAt||['Não contatar','Encerrado','Contratado'].includes(record.status))return [];
   return [{candidate,job,record,due:reminder.date<=today,overdue:reminder.date<today}];
  }).sort((a,b)=>a.record.followUp!.date.localeCompare(b.record.followUp!.date)||a.candidate.name.localeCompare(b.candidate.name,'pt-BR'));
 }
 export function recordFollowUp(record:RecordData,action:'schedule'|'complete'|'cancel',date:string,note:string,at:string):RecordData{
- if(action!=='cancel'&&['Não contatar','Encerrado','Selecionado'].includes(record.status))throw Error('Este processo está encerrado ou bloqueado para novos contatos.');
+ if(action!=='cancel'&&['Não contatar','Encerrado','Contratado'].includes(record.status))throw Error('Este processo está encerrado ou bloqueado para novos contatos.');
  if(action==='schedule'){
   if(!date||!validInterviewDate(date)||note.length>2000)throw Error('Informe uma data válida e uma observação de até 2.000 caracteres.');
   return {...record,followUp:{date,note:note.trim(),updated:at},events:[...record.events,{at,text:`Próximo contato definido para ${date.split('-').reverse().join('/')}`}]};

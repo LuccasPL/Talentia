@@ -19,7 +19,7 @@ export function reportSources(data:Data){
  return (record:RecordData)=>{
   const c=candidates.get(record.candidateId),j=jobs.get(record.jobId);
   if(!c||!j)return null;
-  return JSON.stringify(canonical({schema:1,job:jobReportSource(j),client:j.clientId?clients.get(j.clientId)||'': '',candidate:{id:c.id,name:c.name,role:c.role,city:c.city,text:c.text,phone:c.phone,email:c.email,source:c.source,cvSourceId:c.cvSourceId,selfDeclaration:c.selfDeclaration},analysis:analyses.get(j.id)?.get(c.id),record:{interest:record.interest,availability:record.availability,notes:record.notes,conditionsResponse:record.conditionsResponse,interview:record.interview?{items:record.interview.items}:undefined},report:record.report}));
+  return JSON.stringify(canonical({schema:1,job:jobReportSource(j),client:j.clientId?clients.get(j.clientId)||'': '',candidate:{id:c.id,name:c.name,role:c.role,city:c.city,text:c.text,phone:c.phone,email:c.email,source:c.source,cvSourceId:c.cvSourceId,selfDeclaration:c.selfDeclaration},analysis:analyses.get(j.id)?.get(c.id),record:{interest:record.interest,availability:record.availability,notes:record.notes,conditionsResponse:record.conditionsResponse,evaluation:record.evaluation,interview:record.interview?{items:record.interview.items}:undefined},report:record.report}));
  };
 }
 

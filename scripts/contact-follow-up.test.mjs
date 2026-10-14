@@ -19,7 +19,7 @@ test('scheduling and completion preserve recruitment data, and copying a draft h
 });
 test('pending list isolates jobs, excludes archived and terminal records, and sorts by date',()=>{
  const records=['2026-10-12','2026-10-09','2026-10-10'].map((date,i)=>recordFollowUp({...record,candidateId:String(i)},'schedule',date,'',at));
- const data={candidates:[{id:'0',name:'Ana'},{id:'1',name:'Bia'},{id:'2',name:'Carla'},{id:'archived',mergedInto:'0',name:'Outra'}],jobs:[{id:'j'},{id:'other'}],records:[...records,{...records[0],jobId:'other'},...['Não contatar','Encerrado','Selecionado'].map(status=>({...records[0],status})),{...records[0],candidateId:'missing'},{...records[0],candidateId:'archived'},{...records[0],followUp:{...records[0].followUp,completedAt:at}}]};
+ const data={candidates:[{id:'0',name:'Ana'},{id:'1',name:'Bia'},{id:'2',name:'Carla'},{id:'archived',mergedInto:'0',name:'Outra'}],jobs:[{id:'j'},{id:'other'}],records:[...records,{...records[0],jobId:'other'},...['Não contatar','Encerrado','Contratado'].map(status=>({...records[0],status})),{...records[0],candidateId:'missing'},{...records[0],candidateId:'archived'},{...records[0],followUp:{...records[0].followUp,completedAt:at}}]};
  const list=followUpItems(data,'j',Date.parse(at));assert.deepEqual(list.map(i=>i.record.followUp.date),['2026-10-09','2026-10-10','2026-10-12']);assert.equal(list.filter(i=>i.due).length,2);assert.equal(list.filter(i=>i.overdue).length,1);assert.equal(followUpItems(data,'all',Date.parse(at)).length,4);
 });
 test('invalid dates and blocked contacts cannot create reminders or messages',()=>{

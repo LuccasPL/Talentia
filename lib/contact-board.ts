@@ -1,5 +1,5 @@
 import type {Candidate,RecordData} from './domain';
-export const contactStatusLabels:Record<string,string>={'Não contatado':'Não contatado','Contato realizado':'Aguardando retorno','Respondeu':'Respondeu','Entrevista':'Entrevista','Selecionado':'Selecionado','Encerrado':'Encerrado','Não contatar':'Não contatar'};
+export const contactStatusLabels:Record<string,string>={'Não contatado':'Não contatado','Contato realizado':'Aguardando retorno','Respondeu':'Respondeu','Entrevista':'Entrevista','Selecionado':'Seleção anterior — esclarecer','Recomendado':'Recomendado pela recrutadora','Apresentado ao cliente':'Apresentado ao cliente','Aguardando decisão do cliente':'Aguardando decisão do cliente','Entrevista com cliente':'Entrevista com cliente','Aprovado pelo cliente':'Aprovado pelo cliente','Proposta do cliente':'Proposta do cliente','Proposta aceita':'Proposta aceita','Contratado':'Contratado','Encerrado':'Encerrado','Não contatar':'Não contatar'};
 export type ContactItem={candidate:Candidate;record:RecordData;lastUpdate:string};
 export function contactItems(candidates:Candidate[],records:RecordData[],jobId:string):ContactItem[]{
  const current=new Map(records.filter(r=>r.jobId===jobId).map(r=>[r.candidateId,r]));
