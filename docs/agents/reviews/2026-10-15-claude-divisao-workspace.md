@@ -2,7 +2,9 @@
 
 Este registro existe para que outra LLM (ex.: Codex) que trabalhe neste checkout entenda **o que o Claude alterou, por quê e o que ficou de fora**, sem acesso à conversa original.
 
-Base: `0c558d0` (HEAD de `main`), com o trabalho **não commitado** de "prazos de apresentação" já presente no checkout. Situação: **nada foi commitado nem publicado.** Tudo está no working tree, misturado com esse trabalho anterior.
+Base: `0c558d0` (HEAD de `main`), com o trabalho **não commitado** de "prazos de apresentação" já presente no checkout.
+
+Situação: com autorização do usuário, tudo foi commitado em `main` **num único commit**, `1319e25` ("feat: add presentation deadlines overview and split workspace views"). Esse commit inclui a refatoração do Claude e o trabalho de prazos. Não houve push. Os dois trabalhos ficaram juntos porque `workspace.tsx` contém os dois, e separá-los deixaria um commit intermediário que não compila.
 
 ## Pedido do usuário
 
