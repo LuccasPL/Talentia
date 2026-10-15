@@ -8,7 +8,10 @@ declare
  pdf text:=encode(convert_to('%PDF-1.4 ficticio descarte','UTF8'),'base64');
  kept_pdf text:=encode(convert_to('%PDF-1.4 ficticio aceite','UTF8'),'base64');
  import_uuid uuid:=gen_random_uuid(); result boolean;
+ k text:='test-gateway-key-'||repeat('d',40); client text:=repeat('d',64);
 begin
+ -- Throwaway server key for the gateway functions; the rollback restores the real key hash.
+ insert into private.gateway_keys(purpose,key_hash) values('public-applications',encode(sha256(convert_to(k,'UTF8')),'hex')) on conflict(purpose) do update set key_hash=excluded.key_hash;
  insert into auth.users(id,aud,role,email) values
   (uid,'authenticated','authenticated',uid||'@example.invalid'),
   (other_uid,'authenticated','authenticated',other_uid||'@example.invalid');
@@ -17,8 +20,8 @@ begin
  set local role authenticated;
  issued:=public.issue_application_link(jid,'Recrutadora fictícia',7,10); token:=issued->>'token';
  set local role anon; perform set_config('request.jwt.claim.sub','',true);
- perform public.submit_application(token,answer,'nome-pessoal.pdf',pdf);
- perform public.submit_application(token,answer,'nome-aceito.pdf',kept_pdf);
+ perform public.application_submit(token,answer,'nome-pessoal.pdf',pdf,k,client);
+ perform public.application_submit(token,answer,'nome-aceito.pdf',kept_pdf,k,client);
  set local role postgres;
  select id into strict app from public.candidate_applications where link_id=(issued->>'id')::uuid and file_name='nome-pessoal.pdf';
  select id into strict accepted_app from public.candidate_applications where link_id=(issued->>'id')::uuid and file_name='nome-aceito.pdf';
@@ -65,7 +68,7 @@ begin
  end;
  -- Removing the fingerprint permits a fresh submission of a previously discarded PDF.
  set local role anon; perform set_config('request.jwt.claim.sub','',true);
- if public.submit_application(token,answer,'reenvio.pdf',pdf) is null then raise exception 'Fresh submission failed'; end if;
+ if public.application_submit(token,answer,'reenvio.pdf',pdf,k,client)->>'received' is null then raise exception 'Fresh submission failed'; end if;
  set local role postgres;
  if (select count(*) from public.candidate_applications where link_id=(issued->>'id')::uuid)<>3 then
   raise exception 'Discarded fingerprint still deduplicates';

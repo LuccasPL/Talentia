@@ -101,6 +101,14 @@ Limites:
 - reenviar o mesmo PDF pelo mesmo link não gera uma nova candidatura;
 - novos envios são recusados enquanto houver 100 candidaturas pendentes;
 - cada conta pode ter até 20 links ativos.
+- cada conexão (IP, guardado apenas como hash) pode abrir o link 60 vezes e tentar enviar 5 vezes por hora; tentativas inválidas também contam.
+
+Proteções da entrada pública:
+- o Supabase só aceita aberturas e envios feitos pelo servidor da Talentia, que apresenta uma chave secreta (TALENTIA_PUBLIC_GATEWAY_SECRET, configurada na Vercel; o banco guarda apenas o hash dela);
+- um campo invisível e um tempo mínimo de preenchimento, assinado pelo servidor, recusam envios automáticos;
+- PDFs com scripts, ações automáticas, anexos, mídia incorporada, formulários XFA ou senha são recusados antes de entrar na fila. É uma checagem heurística, não um antivírus.
+
+Detalhes e pendências: docs/agents/reviews/2026-10-15-claude-seguranca-link-publico.md.
 
 O link não comprova identidade e qualquer pessoa que o tenha pode enviar. Aceitar exige a leitura de PDF com Claude liberada para a conta. A candidatura aceita não cria registro na vaga: compare o perfil na vaga como qualquer outro. Não há captcha nem limite por IP. Antes de decidir, o botão Abrir PDF enviado mostra o arquivo da fila, apenas para a dona da conta e enquanto a candidatura estiver pendente. O menu mostra quantas candidaturas aguardam revisão.
 

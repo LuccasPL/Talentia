@@ -228,3 +228,4 @@ body{background:var(--background);color:var(--foreground)}
 @media(max-width:600px){.apply-shell{padding:20px 16px 40px}.apply-brand{font-size:1.7rem}.apply-badge{font-size:.72rem;padding:6px 10px}.apply-intro h1{font-size:2rem}.apply-lead{margin:14px 0 20px}.apply-conditions{padding:18px 16px}.apply-conditions dl{grid-template-columns:1fr;gap:14px}.apply-card{padding:24px 18px;border-radius:20px}.apply-fields{grid-template-columns:1fr;gap:14px}.apply-drop{padding:16px}.apply-status h1{font-size:1.7rem}}
 @media(prefers-reduced-motion:reduce){.apply-input,.apply-drop{transition:none}}
 .candidate-public-card .brand{color:#593b50}
+.apply-trap{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}

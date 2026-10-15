@@ -12,9 +12,9 @@ const fields=[{key:'name',label:'Nome completo',type:'text',max:200,auto:'name',
 const size=(bytes:number)=>bytes<1024*1024?`${Math.max(1,Math.round(bytes/1024))} KB`:`${(bytes/1024/1024).toFixed(1).replace('.',',')} MB`;
 
 export default function ApplicationForm(){
- const [token,setToken]=useState(''),[context,setContext]=useState<ApplicationContext|null>(null),[expiresAt,setExpiresAt]=useState(''),[draft,setDraft]=useState(blankAnswer),[file,setFile]=useState<File|null>(null),[error,setError]=useState(''),[fileError,setFileError]=useState(''),[busy,setBusy]=useState(true),[done,setDone]=useState(false),[dragging,setDragging]=useState(false);
+ const [token,setToken]=useState(''),[context,setContext]=useState<ApplicationContext|null>(null),[expiresAt,setExpiresAt]=useState(''),[draft,setDraft]=useState(blankAnswer),[file,setFile]=useState<File|null>(null),[error,setError]=useState(''),[fileError,setFileError]=useState(''),[busy,setBusy]=useState(true),[done,setDone]=useState(false),[dragging,setDragging]=useState(false),[formToken,setFormToken]=useState(''),[website,setWebsite]=useState('');
  // The capability travels in the URL fragment, so it never reaches server logs, referrers or analytics.
- useEffect(()=>{const value=window.location.hash.slice(1);const abort=new AbortController();Promise.resolve().then(()=>{if(!/^[a-f0-9]{64}$/.test(value))throw Error('Abra o link completo enviado pela recrutadora.');return fetch('/api/public/applications',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'view',token:value}),signal:abort.signal})}).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error);setToken(value);setContext(d.context);setExpiresAt(d.expiresAt)}).catch(e=>{if(e.name!=='AbortError')setError(e.message)}).finally(()=>{if(!abort.signal.aborted)setBusy(false)});return()=>abort.abort()},[]);
+ useEffect(()=>{const value=window.location.hash.slice(1);const abort=new AbortController();Promise.resolve().then(()=>{if(!/^[a-f0-9]{64}$/.test(value))throw Error('Abra o link completo enviado pela recrutadora.');return fetch('/api/public/applications',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'view',token:value}),signal:abort.signal})}).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error);setToken(value);setContext(d.context);setExpiresAt(d.expiresAt);setFormToken(d.formToken||'')}).catch(e=>{if(e.name!=='AbortError')setError(e.message)}).finally(()=>{if(!abort.signal.aborted)setBusy(false)});return()=>abort.abort()},[]);
  function field<K extends keyof typeof blankAnswer>(key:K,value:(typeof blankAnswer)[K]){setDraft(d=>({...d,[key]:value}))}
  function choose(next:File|undefined){if(!next)return;const problem=pdfProblem(next);setFileError(problem);setFile(problem?null:next)}
  function drop(e:DragEvent<HTMLLabelElement>){e.preventDefault();setDragging(false);if(!busy)choose(e.dataTransfer.files?.[0])}
@@ -23,7 +23,7 @@ export default function ApplicationForm(){
   if(!file){setFileError('Anexe seu currículo em PDF para continuar.');return}
   if(!draft.phone.trim()&&!draft.email.trim()){setError('Informe pelo menos telefone ou e-mail.');return}
   setBusy(true);setError('');
-  try{const form=new FormData();form.set('token',token);form.set('answer',JSON.stringify({...draft,consent:true}));form.set('file',file);const r=await fetch('/api/public/applications',{method:'POST',body:form});const d=await r.json();if(!r.ok)throw Error(d.error);setDone(true);window.history.replaceState(null,'',window.location.pathname);setToken('');window.scrollTo({top:0})}
+  try{const form=new FormData();form.set('token',token);form.set('answer',JSON.stringify({...draft,consent:true}));form.set('file',file);form.set('formToken',formToken);form.set('website',website);const r=await fetch('/api/public/applications',{method:'POST',body:form});const d=await r.json();if(!r.ok)throw Error(d.error);setDone(true);window.history.replaceState(null,'',window.location.pathname);setToken('');window.scrollTo({top:0})}
   catch(e){setError((e as Error).message)}finally{setBusy(false)}
  }
  const brand=<div className="apply-brand">talentia<span>.</span></div>;
@@ -44,6 +44,8 @@ export default function ApplicationForm(){
     <p className="apply-muted">Informe pelo menos telefone ou e-mail. Não envie CPF, documentos pessoais ou senhas.</p>
     {error&&<p className="apply-alert" role="alert">{error}</p>}
     <form onSubmit={submit} noValidate={false}><fieldset disabled={busy}>
+     {/* Honeypot: hidden from people and assistive tech; automated scripts tend to fill every field. */}
+     <div className="apply-trap" aria-hidden="true"><label htmlFor="apply-website">Site</label><input id="apply-website" name="website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={e=>setWebsite(e.target.value)}/></div>
      <div className="apply-fields">{fields.map(f=><div key={f.key} className={f.wide?'apply-wide':''}><label className="apply-label" htmlFor={`apply-${f.key}`}>{f.label}</label><input id={`apply-${f.key}`} className="apply-input" type={f.type} autoComplete={f.auto} required={f.required} minLength={f.required?2:undefined} maxLength={f.max} value={draft[f.key]} onChange={e=>field(f.key,e.target.value)}/></div>)}</div>
      <h2 className="apply-section">Currículo</h2>
      <label htmlFor="apply-file" className={`apply-drop${dragging?' dragging':''}${file?' has-file':''}`} onDragOver={e=>{e.preventDefault();setDragging(true)}} onDragLeave={()=>setDragging(false)} onDrop={drop}>

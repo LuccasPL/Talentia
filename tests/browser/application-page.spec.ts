@@ -1,4 +1,4 @@
-import {test,expect,applicationToken} from './fixture';
+import {test,expect,applicationToken,applicationFormToken} from './fixture';
 
 // Public /candidatura page rendered by the test gallery with simulated APIs. Not a validation of Supabase or the real upload.
 const pdf={name:'curriculo-ficticio.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4 currículo fictício para teste')};
@@ -24,6 +24,20 @@ test('application page: shows the vacancy, sends declared data with the PDF and 
  expect(sandbox.publicSubmissions).toHaveLength(1);
  expect(sandbox.publicSubmissions[0].answer).toEqual({name:'Pessoa Fictícia Delta',email:'',phone:'(11) 90000-0000',city:'Campinas, SP',role:'',message:'',consent:true});
  expect(sandbox.publicSubmissions[0].fileName).toBe('curriculo-ficticio.pdf');
+ // The server's form token travels back unchanged and the honeypot stays empty for people.
+ expect(sandbox.publicSubmissions[0].formToken).toBe(applicationFormToken);
+ expect(sandbox.publicSubmissions[0].website).toBe('');
+});
+
+test('application page: the honeypot field is invisible and out of the keyboard and accessibility flow',async({page})=>{
+ await page.goto(`/candidatura.html#${applicationToken}`);
+ await expect(page.getByRole('heading',{level:1,name:'Vaga Fictícia Alfa'})).toBeVisible();
+ const trap=page.locator('#apply-website');
+ await expect(trap).toHaveAttribute('tabindex','-1');
+ await expect(page.locator('.apply-trap')).toHaveAttribute('aria-hidden','true');
+ await expect(page.getByRole('textbox',{name:'Site'})).toHaveCount(0);
+ const box=await trap.boundingBox();expect(box===null||box.x+box.width<=0).toBe(true);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 
 test('application page: rejects non-PDF files before sending and explains an unavailable link',async({page,sandbox})=>{
