@@ -16,6 +16,8 @@ O alvo de navegador é fixo e local. Não configure URL de produção ou credenc
 
 Criação de vaga, organização de critérios e comparação determinística, cadastro sem CV, checklist do briefing, triagem com revisão humana, respostas e conclusão de entrevista, parecer revisado, registro de apresentação ao cliente, agenda em Brasília, validação local de anexos acima de 2 MB/extensão inválida, erros de rede, conflito de versão, largura no celular e proteção do rascunho de entrevista ao fechar.
 
+`profile-drafts.spec.ts` cobre proteção dos rascunhos de Dados e Convite, confirmação isolada, detalhes sem mensagem, descarte, rascunhos simultâneos, sucesso/falha/conflito e resposta atrasada após reabrir a mesma pessoa. A fixture de edição usa o schema e a transformação de domínio reais com persistência simulada. A proteção de saída da página é verificada por evento `beforeunload` sintético; a confirmação nativa continua dependente do navegador. O atalho de currículos/históricos anteriores também participa da proteção.
+
 Os fluxos de interface usam APIs simuladas com as mesmas funções de domínio, mas **não executam os handlers autenticados, o Supabase, o armazenamento de arquivos ou o Claude**. Salvar e recarregar nesses testes comprova persistência na simulação. Não comprova persistência no banco real. O roteamento de `next/link` é representado por links HTML na galeria.
 
 Ainda exigem um ambiente de homologação e conta dedicados: login/recuperação completos, isolamento entre duas contas via RLS, PDF válido até armazenamento e extração, processamento assíncrono e tentativas, integração Claude, geração/abertura de relatórios PDF e links públicos de atualização. Não usar uma conta de recrutadora real para preencher essa lacuna.

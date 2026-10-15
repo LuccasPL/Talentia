@@ -1,14 +1,15 @@
 import {test as base,expect} from '@playwright/test';
 import {createHash,randomUUID} from 'node:crypto';
 import {starterJob,emptyRecord,draftCriteria,termAnalysis,type Data} from '../../lib/domain';
-import {jobSchema,recordSchema} from '../../lib/validation';
+import {jobSchema,recordSchema,candidateEditSchema} from '../../lib/validation';
+import {updateCandidateData} from '../../lib/candidate-update';
 import {saveTriage,triageSource} from '../../lib/candidate-triage';
 import {preserveJourney,changeJobLifecycle,saveEvaluation,recordClientAction,evaluationSource} from '../../lib/recruitment-journey';
 import {reconcileReportReviews,reportSources} from '../../lib/report-review';
 const hash=(s:string)=>createHash('sha256').update(s).digest('hex');
 export const candidateId='00000000-0000-4000-8000-000000000001';
 export function fictionalData():Data{return {version:1,aiConfigured:true,clients:[],records:[],candidates:[{id:candidateId,name:'Pessoa Fictícia Alfa',role:'Atendimento',city:'São Paulo',phone:'',email:'',source:'Cadastro manual',updated:'2026-10-15',demo:false,text:'PERFIL FICTÍCIO. Atendimento ao público e demonstração de produtos em loja de exemplo.'}],jobs:[{...starterJob,id:'teste-vaga',title:'Vaga Fictícia Alfa',description:'Experiência com atendimento ao público.',criteria:[{id:'criterio-atendimento',text:'Experiência com atendimento ao público',kind:'experiencia',priority:'obrigatorio'}],analyses:[],stage:1}]};}
-type Sandbox={data:Data;failNextSave:boolean;unexpected:string[]};
+type Sandbox={data:Data;failNextSave:boolean;unexpected:string[];candidateSaveGate?:Promise<void>};
 export const test=base.extend<{sandbox:Sandbox}>({
  sandbox:[async({context},use)=>{
   const state:Sandbox={data:fictionalData(),failNextSave:false,unexpected:[]};
@@ -30,6 +31,14 @@ export const test=base.extend<{sandbox:Sandbox}>({
     if(url.pathname==='/api/candidates'&&req.method()==='POST'){
      const body=req.postDataJSON();if(!body.candidate?.name?.trim())return await reply({error:'Informe o nome.'},400);
      state.data={...state.data,candidates:[...state.data.candidates,{...body.candidate,id:randomUUID(),updated:new Date().toISOString()}],version:state.data.version!+1};return await reply(state.data);
+    }
+    if(url.pathname==='/api/candidates'&&req.method()==='PATCH'){
+     const input=candidateEditSchema.parse(req.postDataJSON());
+     if(state.candidateSaveGate){const gate=state.candidateSaveGate;state.candidateSaveGate=undefined;await gate;}
+     if(state.failNextSave){state.failNextSave=false;return await reply({error:'Falha fictícia de rede. Tente novamente.'},503)}
+     if(input.version!==state.data.version)return await reply({error:'Este espaço mudou em outra sessão. Recarregue antes de editar.'},409);
+     const next=updateCandidateData(state.data,input.candidateId,input.changes,input.confirmedFields,input.method,new Date().toISOString());
+     state.data={...next,version:state.data.version!+1};return await reply(state.data);
     }
     if(url.pathname==='/api/ai'){
      const body=req.postDataJSON();if(body.action==='criteria')return await reply({criteria:draftCriteria(body.description),engine:'Simulação determinística · sem IA'});

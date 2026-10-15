@@ -1,14 +1,15 @@
  'use client';
-import {useState} from 'react';
+import {useEffect,useState} from 'react';
 import {Mail,MessageSquare,Copy,Save,FilePenLine,LoaderCircle} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {toast} from 'sonner';
 import {emptyInvitation,generateInvitation,type InterviewInvitation as Invitation} from '@/lib/interview-invitation';
 import {brazilDate} from '@/lib/pt-br';
-export default function InterviewInvitation({candidateName,jobTitle,email,phone,saved,blocked,onSave}:{candidateName:string;jobTitle:string;email:string;phone:string;saved?:Invitation;blocked:boolean;onSave:(draft:Invitation)=>Promise<void>}){
+export default function InterviewInvitation({candidateName,jobTitle,email,phone,saved,blocked,onSave,onDirty}:{candidateName:string;jobTitle:string;email:string;phone:string;saved?:Invitation;blocked:boolean;onDirty?:(dirty:boolean)=>void;onSave:(draft:Invitation)=>Promise<void>}){
  const [draft,setDraft]=useState<Invitation>(()=>saved?structuredClone(saved):emptyInvitation(jobTitle));
  const [busy,setBusy]=useState(false),[savedSnapshot,setSavedSnapshot]=useState(()=>JSON.stringify(saved||emptyInvitation(jobTitle)));
  const dirty=JSON.stringify(draft)!==savedSnapshot;
+ useEffect(()=>{onDirty?.(dirty);return()=>onDirty?.(false)},[dirty,onDirty]);
  function field(key:keyof Invitation,value:string){setDraft(d=>({...d,[key]:value}))}
  function generate(){if((draft.emailBody.trim()||draft.message.trim())&&!window.confirm('Substituir os textos atuais por novos rascunhos? Suas edições serão substituídas.'))return;try{setDraft(generateInvitation(candidateName,draft));toast.success('Rascunhos preparados para sua revisão.')}catch(e){toast.error((e as Error).message)}}
  async function copy(text:string){try{await navigator.clipboard.writeText(text);toast.success('Texto copiado. Revise antes de enviar.')}catch{toast.error('Não foi possível copiar. Selecione o texto e copie manualmente.')}}
