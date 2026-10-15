@@ -52,6 +52,15 @@ Base: `57143eb` (`main`). Pedido do usuário: "implementar direto o MVP do link 
   - INFO "RLS enabled no policy" em `private.application_files`: é intencional, porque não há acesso direto, e o mesmo aviso já existia para `talentia_private.api_limits`.
   - WARN "Leaked Password Protection Disabled": configuração de Auth anterior a esta mudança, não alterada (é uma configuração de segurança do usuário).
 
+- **Publicação.** O commit `c540740` foi enviado a `main` depois da migração. O deploy na Vercel terminou com sucesso (status "Vercel" do commit no GitHub) e o check de CI passou.
+- **Verificação em produção sem login**:
+  - `scripts/check-production.mjs` passou;
+  - `/candidatura` respondeu 200;
+  - `POST /api/public/applications` com token inválido respondeu 410 com a mensagem de link indisponível, o que confirma que a RPC existe e responde;
+  - a mesma rota com outra origem respondeu 403;
+  - `GET /api/applications` sem sessão respondeu 401.
+- **Não verificado:** o fluxo completo com uma conta logada (criar link → enviar PDF → aceitar → importação concluída). O agente não faz login em contas do usuário; esse teste precisa ser feito pela recrutadora com um currículo fictício.
+
 ## Ordem de publicação obrigatória
 
 1. Aplicar a migração no Supabase.
