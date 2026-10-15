@@ -81,11 +81,43 @@ Observação fora do escopo, sem alteração: `openCandidate` verifica só `jour
 - O novo escopo do lint (`app lib hooks components proxy.ts`) passou sem nenhum aviso.
 - Os testes de interface usam APIs simuladas e dados fictícios. Isso **não** valida Supabase, RLS ou Claude reais.
 
+## Rodada 2 — lista de candidatos e diálogos (15/10/2026, à tarde)
+
+Feita depois do push de `95fb82c`, a pedido do usuário ("podemos seguir"). Nenhum trabalho de outra LLM estava pendente no checkout quando a rodada começou (`git status` limpo).
+
+| Arquivo | Tipo | O que mudou |
+| --- | --- | --- |
+| `app/candidate-list.tsx` | **novo** | `CandidateList`: barra (ordenar, duplicados, importar), ações em lote, botão "Comparar", cards e paginação do banco de talentos. É o corpo de `renderCandidates()` depois do painel de filtros. |
+| `app/workspace-dialogs.tsx` | **novo** | `NewJobDialog` e `AddCandidatesDialog`. |
+| `app/workspace.tsx` | editado | Usa os componentes acima. Detalhes abaixo. |
+| `tests/browser/workspace-views.spec.ts` | **novo** | Regressão para Contatos (busca, limpar, registrar abordagem) e Banco de talentos (busca vazia, seleção em lote, lista de interesse). Antes não havia teste de navegador cobrindo essas telas. |
+
+**Detalhes em `app/workspace.tsx`**
+
+- **Lista de candidatos**
+  - `renderCandidates()` continua existindo, mas agora devolve apenas `<CandidateFiltersPanel/>` seguido de `<CandidateList/>`. Ela é usada em 2 lugares: Detalhes da vaga e Banco de talentos.
+  - A linha `pageCount/visiblePage/visibleCandidates` saiu do `Workspace` e passou para `CandidateList`, que recebe `page={candidatePage}` e `onPage={setCandidatePage}`.
+  - A seleção em lote (`batchSelection`, `batchIds`, `selectBatch`, `toggleBatch`, `applyBatch`) e `analyze` **continuam no `Workspace`**; o componente só as recebe.
+- **Diálogos**
+  - Os estados `newTitle`, `candidateName`, `candidateCity` e `candidateText` saíram do `useState` gigante do `Workspace` e foram para dentro dos componentes de diálogo. Esses componentes ficam sempre montados, então o texto digitado continua sobrevivendo ao fechar o diálogo, como antes.
+  - `createJob(title)` e `importText(name,city,text)` agora **recebem os valores e retornam `true`/`false`**. O diálogo limpa os campos quando recebe `true`. As validações, mensagens (toasts), o `setBusy` e as chamadas de API não mudaram.
+- **Imports removidos**: `CandidateBatch`, `CandidateCreate`, `PdfImporter`, `Dialog*` e o ícone `ArrowUpRight`.
+- **Tamanho**: ≈65,0 KB → ≈56,8 KB. Desde o início da divisão, o arquivo foi de ≈74,4 KB para ≈56,8 KB.
+
+**Finais de linha**
+
+- O `app/workspace.tsx` no disco estava com finais de linha **misturados** (CRLF e LF). Isso foi causado em parte pelos scripts de edição da rodada 1, que não tratavam CRLF.
+- O arquivo foi normalizado para CRLF, igual aos demais arquivos do checkout (`core.autocrlf=true`). O índice do git continua em LF, então o diff não fica poluído.
+- Ao editar por script, trate os dois finais de linha.
+
+**Verificações da rodada 2**
+
+- `npm run test:agent`: **7/7 etapas aprovadas**, 56/56 testes de navegador.
+- Depois disso, `tests/browser/workspace-views.spec.ts` foi adicionado, com 4/4 passando (chromium + mobile). O total de testes de navegador passa a ser 60.
+
 ## Próximos passos sugeridos para dividir o `workspace.tsx`
 
-Em ordem de risco crescente:
+Os itens "lista de candidatos" e "diálogos" foram concluídos na rodada 2. Restam, em ordem de risco crescente:
 
-1. `renderCandidates()` (≈6,6 KB) → `app/candidate-list.tsx`. Depende de paginação, seleção em lote (`batchIds`, `toggleBatch`, `applyBatch`) e `openCandidate`.
-2. Diálogos "Nova vaga" e "Adicionar candidatos" → componentes próprios. O segundo controla `candidateName`, `candidateCity`, `candidateText` e `importText`.
-3. `<Sheet>` do perfil (≈13,7 KB) → `app/candidate-profile-sheet.tsx`. É a parte mais sensível, porque concentra a proteção de rascunhos (`journeyDrafts`, `profileSession`, `editorDirty`, `invitationDirty`). Mova a proteção junto e rode `tests/browser/profile-drafts.spec.ts`.
-4. Funções `save*` (`saveRecord`, `saveInvitation`, `saveAppointment`…) → um hook `useWorkspaceActions`, para que o componente fique apenas com a composição das telas.
+1. `<Sheet>` do perfil (≈13,7 KB) → `app/candidate-profile-sheet.tsx`. É a parte mais sensível, porque concentra a proteção de rascunhos (`journeyDrafts`, `profileSession`, `editorDirty`, `invitationDirty`). Mova a proteção junto e rode `tests/browser/profile-drafts.spec.ts`.
+2. Funções `save*` (`saveRecord`, `saveInvitation`, `saveAppointment`…) → um hook `useWorkspaceActions`, para que o componente fique apenas com a composição das telas.
