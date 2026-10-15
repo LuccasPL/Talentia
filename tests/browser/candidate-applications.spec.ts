@@ -32,9 +32,14 @@ test('applications: duplicates are flagged and nothing changes until the recruit
  await expect(alfa.getByText('Possível perfil já cadastrado:',{exact:true})).toBeVisible();
  await expect(alfa.getByRole('button',{name:'Pessoa Fictícia Alfa (mesmo nome)',exact:true})).toBeVisible();
  await expect(gama.getByText('Possível perfil já cadastrado:',{exact:true})).toHaveCount(0);
- page.once('dialog',dialog=>void dialog.dismiss());
+ const discardedData=JSON.stringify(sandbox.applications[0]);
+ let discardMessage='';
+ page.once('dialog',dialog=>{discardMessage=dialog.message();void dialog.dismiss()});
  await alfa.getByRole('button',{name:'Descartar',exact:true}).click();
  await expect(alfa).toBeVisible();expect(sandbox.applicationActions).toEqual([]);
+ expect(discardMessage).toContain('Os dados informados e o PDF desta candidatura serão apagados da base ativa.');
+ expect(discardMessage).toContain('Isso não exclui um perfil já cadastrado');
+ expect(JSON.stringify(sandbox.applications[0])).toBe(discardedData);
  page.once('dialog',dialog=>void dialog.accept());
  await alfa.getByRole('button',{name:'Descartar',exact:true}).click();
  await expect(alfa).toHaveCount(0);
@@ -44,6 +49,8 @@ test('applications: duplicates are flagged and nothing changes until the recruit
  await expect(page.getByRole('heading',{name:'Nenhuma candidatura pendente.',exact:true})).toBeVisible();
  expect(sandbox.applicationActions).toEqual(['discard','accept']);
  expect(sandbox.applications.map(a=>a.decision)).toEqual(['discarded','accepted']);
+ expect(sandbox.applications[0]).toMatchObject({response:null,file_name:null,file_sha256:null,file_size:null,import_id:null});
+ expect(sandbox.applications[1].response?.email).toBe('gama@example.test');
  expect(JSON.stringify(sandbox.data)).toBe(before);
  expect(sandbox.unexpected).toEqual([]);
 });

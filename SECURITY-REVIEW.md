@@ -1,5 +1,9 @@
 # Revisão de segurança — Talentia
 
+Atualização de 15/10/2026: privilégios excessivos de `pdf_imports` corrigidos em produção; teste de catálogo falhou antes e passou depois. Evidências e escopo em [correção de permissões](docs/agents/reviews/2026-10-15-permissoes-importacoes.md). A revisão abaixo permanece como registro histórico, não como nova execução de todos os checks.
+
+Na mesma data, o descarte de candidaturas passou a eliminar resposta e metadados do PDF, além do arquivo privado, no banco ativo. [Evidências e limites](docs/agents/reviews/2026-10-15-descarte-candidaturas.md).
+
 Data: 10/10/2026. Escopo: código, dependências, arquivos do navegador, autenticação, acesso ao banco e PDFs, chamadas ao Claude e configuração de produção. Revisão com testes direcionados; não constitui um teste de invasão completo ou garantia de ausência de falhas. Nenhum currículo real foi alterado e não foram feitos testes de carga em produção.
 
 ## Proteções implementadas

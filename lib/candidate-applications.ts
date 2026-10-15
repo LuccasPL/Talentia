@@ -18,7 +18,10 @@ export const applicationDays=[7,14,30] as const;
 export const applicationLimits=[10,50,200] as const;
 export type ApplicationContext={title:string;recruiter:string;conditions:JobConditions};
 export type ApplicationLink={id:string;job_id:string;context:ApplicationContext;created_at:string;expires_at:string;revoked_at:string|null;max_submissions:number;submission_count:number};
-export type CandidateApplication={id:string;link_id:string;job_id:string;job_title:string;response:ApplicationAnswer;file_name:string;file_sha256:string;file_size:number;created_at:string;reviewed_at:string|null;decision:'accepted'|'discarded'|null;import_id:string|null};
+export type CandidateApplication={id:string;link_id:string;job_id:string;job_title:string;response:ApplicationAnswer;file_name:string;file_sha256:string;file_size:number;created_at:string;reviewed_at:string|null;decision:'accepted'|null;import_id:string|null};
+
+// Discarded rows are minimal decision records and never belong to the pending queue.
+export type DiscardedApplication=Omit<CandidateApplication,'response'|'file_name'|'file_sha256'|'file_size'|'decision'|'import_id'> & {response:null;file_name:null;file_sha256:null;file_size:null;decision:'discarded';import_id:null};
 
 export function linkState(link:ApplicationLink,now:number):'ativo'|'cancelado'|'expirado'|'completo'{
  if(link.revoked_at)return 'cancelado';

@@ -6,9 +6,13 @@
 - Escopo autorizado e o que fica fora:
 - Situação: proposta / em execução / em revisão / verificada / publicada
 - Coordenador e especialistas necessários:
+- Revisão adicional necessária? Qual risco justifica? (Padrão: somente agente principal; no máximo um revisor.)
+- Contexto mínimo do revisor: resumo, arquivos e evidência esperada, sem histórico completo.
 - Ambiente e commit de referência:
 
 ## Produto/UX
+
+As seções são perspectivas de análise; podem ser preenchidas pelo mesmo agente. Não exigem delegação nem relatório extenso para mudanças pequenas.
 
 - Problema observado e impacto na rotina:
 - Fluxo esperado e estados de erro:

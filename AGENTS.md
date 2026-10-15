@@ -6,13 +6,15 @@ SaaS de recrutamento para uma recrutadora autônoma no Brasil. Interface e mensa
 
 ## Coordenação e delegação
 
-O agente principal coordena o trabalho e responde ao usuário. Para melhorias com impacto de fluxo, várias áreas ou risco de regressão, delegue a especialistas quando a ferramenta de subagentes estiver disponível:
+O agente principal executa e revisa o trabalho por padrão. Por preferência explícita do usuário (15/10/2026), priorize economia de tokens: não convoque a equipe inteira por rotina. Os perfis abaixo podem orientar o próprio agente principal, sem criar subagentes:
 
 - Produto/UX: leia `docs/agents/produto-ux.md`.
 - Engenharia: leia `docs/agents/engenharia.md`.
 - QA: leia `docs/agents/qa.md` e `tests/README.md`.
 
-Para ajustes simples, envolva apenas as especialidades necessárias. Evite delegação em cascata: especialistas não criam outros agentes, salvo solicitação do coordenador dentro da autorização do usuário. Preserve o modelo/configuração herdados; não escolha modelos, serviços externos ou agentes permanentes sem necessidade e autorização aplicáveis.
+Acione no máximo um revisor adicional quando houver risco que justifique revisão independente, como segurança, permissões, migração de banco ou alteração delicada de fluxo. Mudanças comuns de interface, documentação e correções pontuais ficam com o agente principal. Mais especialistas apenas mediante pedido explícito do usuário. Não há delegação em cascata.
+
+Ao delegar, envie uma tarefa curta com objetivo, arquivos relevantes, restrições e evidência esperada. Prefira contexto novo (`fork_turns: "none"`, quando disponível), sem copiar o histórico inteiro; forneça o resumo necessário. Preserve o modelo/configuração herdados, sem overrides. Peça um parecer conciso com achados e referências, evitando releituras amplas e relatórios duplicados. Não escolha serviços externos ou agentes permanentes sem necessidade e autorização aplicáveis.
 
 O coordenador fornece objetivo, critérios de aceite, restrições, arquivos sob responsabilidade de cada agente e evidências esperadas. Use `docs/agents/task-template.md` quando for útil registrar uma tarefa que atravessa áreas.
 
@@ -20,11 +22,11 @@ Especialistas podem trocar perguntas e evidências entre si pelas ferramentas in
 
 ## Fluxo de trabalho
 
-1. Produto/UX explicita a dor da recrutadora, fluxo esperado e critérios verificáveis.
-2. Engenharia propõe a menor solução suficiente e sinaliza contratos, dados e riscos.
-3. O coordenador distribui arquivos para impedir edições concorrentes no mesmo arquivo. Agentes compartilham o mesmo checkout; nunca descartem mudanças alheias.
-4. Engenharia implementa no escopo autorizado. QA verifica critérios e evidências de forma independente; concordância entre agentes não comprova funcionamento.
-5. O coordenador integra, inspeciona alterações, resolve divergências com código/evidência e apresenta resultado, limitações e situação da publicação. Preserve autorizações existentes; não invente nova aprovação para ações já autorizadas.
+1. O agente principal esclarece a necessidade, define critérios e propõe a menor solução suficiente, considerando Produto/UX, Engenharia e QA como perspectivas de trabalho.
+2. Implementa no escopo autorizado e executa testes automatizados convencionais proporcionais à mudança. A bateria não precisa de um subagente para ser executada.
+3. Quando o risco justificar, um revisor adicional recebe escopo delimitado, preferencialmente somente leitura. Se houver edição delegada, atribua arquivos exclusivos; nunca descarte mudanças alheias.
+4. O agente principal verifica os achados e corrige falhas; concordância entre agentes não comprova funcionamento. Evite repetir buscas e testes já concluídos sem mudança ou dúvida concreta.
+5. Registra decisões relevantes de forma breve e apresenta resultado, limitações e situação da publicação. Preserve autorizações existentes; não invente nova aprovação para ações já autorizadas.
 
 ## Qualidade e limites
 

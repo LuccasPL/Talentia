@@ -24,6 +24,14 @@ Ainda exigem um ambiente de homologação e conta dedicados: login/recuperação
 
 ## Integração no GitHub
 
+### Permissões do banco
+
+`supabase/tests/table-privileges.sql` verifica somente catálogos: rejeita TRUNCATE/REFERENCES/TRIGGER para anon e authenticated em tabelas públicas, exige as operações normais de importação, RLS ativo e acesso correto à RPC de conclusão. Execute no banco alvo após migrações de tabelas ou grants, por uma conexão administrativa autorizada. Não executa TRUNCATE, não lê candidatos e não altera dados. O teste falha por exceção se encontrar permissões indevidas; sucesso pode retornar uma lista vazia.
+
+Este teste SQL não integra `npm run test:agent` nem o CI atual, que não recebe credenciais de banco. Ele detecta reincidências quando executado; não bloqueia automaticamente novas migrações.
+
+`supabase/tests/discarded-applications.sql` cria duas contas e candidaturas exclusivamente fictícias em uma transação com rollback. Verifica descarte dos dados/arquivo, isolamento, decisão inválida, preservação dos dados aceitos, restrição contra reintroduzir dados na linha descartada e novo envio após descarte. Execute o arquivo inteiro, incluindo BEGIN/ROLLBACK, em ambiente autorizado. Não usa workspace ou currículo existente. O teste de navegador correspondente usa APIs simuladas e valida a confirmação/cancelamento; não substitui o SQL.
+
 O workflow `Application checks` executa a bateria em pushes e pull requests e guarda os relatórios por 7 dias. Não recebe segredos de produção. A configuração só passa a valer depois de commit e push.
 
 Um check vermelho sinaliza uma falha; **não bloqueia sozinho o deploy automático da Vercel**. Exigir esse check no GitHub e vincular verificações de deployment na Vercel são configurações externas ainda não aplicadas. Não há publicação, rollback ou correção automática pelo executor.

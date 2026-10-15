@@ -7,11 +7,11 @@ import {saveTriage,triageSource} from '../../lib/candidate-triage';
 import {preserveJourney,changeJobLifecycle,saveEvaluation,recordClientAction,evaluationSource} from '../../lib/recruitment-journey';
 import {reconcileReportReviews,reportSources} from '../../lib/report-review';
 import {blankConditions} from '../../lib/candidate-refresh';
-import type {ApplicationLink,CandidateApplication} from '../../lib/candidate-applications';
+import type {ApplicationLink,CandidateApplication,DiscardedApplication} from '../../lib/candidate-applications';
 const hash=(s:string)=>createHash('sha256').update(s).digest('hex');
 export const candidateId='00000000-0000-4000-8000-000000000001';
 export function fictionalData():Data{return {version:1,aiConfigured:true,clients:[],records:[],candidates:[{id:candidateId,name:'Pessoa Fictícia Alfa',role:'Atendimento',city:'São Paulo',phone:'',email:'',source:'Cadastro manual',updated:'2026-10-15',demo:false,text:'PERFIL FICTÍCIO. Atendimento ao público e demonstração de produtos em loja de exemplo.'}],jobs:[{...starterJob,id:'teste-vaga',title:'Vaga Fictícia Alfa',description:'Experiência com atendimento ao público.',criteria:[{id:'criterio-atendimento',text:'Experiência com atendimento ao público',kind:'experiencia',priority:'obrigatorio'}],analyses:[],stage:1}]};}
-type Sandbox={data:Data;failNextSave:boolean;unexpected:string[];candidateSaveGate?:Promise<void>;applicationLinks:ApplicationLink[];applications:CandidateApplication[];applicationActions:string[];publicSubmissions:{answer:unknown;fileName:string;fileSize:number}[]};
+type Sandbox={data:Data;failNextSave:boolean;unexpected:string[];candidateSaveGate?:Promise<void>;applicationLinks:ApplicationLink[];applications:(CandidateApplication|DiscardedApplication)[];applicationActions:string[];publicSubmissions:{answer:unknown;fileName:string;fileSize:number}[]};
 // Public application page (/candidatura.html in the gallery): only this token opens the fictitious vacancy.
 export const applicationToken='f'.repeat(64);
 export const test=base.extend<{sandbox:Sandbox}>({
@@ -74,7 +74,7 @@ export const test=base.extend<{sandbox:Sandbox}>({
      if(b.action==='issue'){const job=state.data.jobs.find(j=>j.id===b.jobId);if(!job)return await reply({error:'Escolha uma vaga da sua base.'},400);const id=randomUUID();state.applicationLinks.unshift({id,job_id:job.id,context:{title:job.title,recruiter:b.recruiter,conditions:{...blankConditions,...job.conditions}},created_at:at,expires_at:new Date(Date.now()+b.days*86400000).toISOString(),revoked_at:null,max_submissions:b.maxSubmissions,submission_count:0});return await reply({id,token:'f'.repeat(64),expiresAt:state.applicationLinks[0].expires_at});}
      if(b.action==='revoke'){const link=state.applicationLinks.find(l=>l.id===b.linkId&&!l.revoked_at);if(!link)return await reply({error:'Este link já foi cancelado.'},409);link.revoked_at=at;return await reply({ok:true});}
      const app=state.applications.find(a=>a.id===b.applicationId&&!a.reviewed_at);if(!app)return await reply({error:'Esta candidatura já foi revisada.'},409);
-     app.reviewed_at=at;app.decision=b.action==='accept'?'accepted':'discarded';return await reply(b.action==='accept'?{ok:true,warning:'',imports:[]}:{ok:true});
+     state.applications=state.applications.map(a=>a.id!==app.id?a:b.action==='accept'?{...app,reviewed_at:at,decision:'accepted'} as CandidateApplication:{...app,reviewed_at:at,decision:'discarded',response:null,file_name:null,file_sha256:null,file_size:null,import_id:null});return await reply(b.action==='accept'?{ok:true,warning:'',imports:[]}:{ok:true});
     }
     state.unexpected.push(`${req.method()} ${url.pathname}`);return await reply({error:'Operação não prevista no ambiente de testes.'},501);
    }catch(e){return await reply({error:(e as Error).message},400)}
