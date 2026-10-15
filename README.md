@@ -122,9 +122,27 @@ Na aba Dados do perfil, "Excluir dados desta pessoa" apaga de forma definitiva, 
 - o histórico de importação, a candidatura aceita e os links de atualização;
 - as cópias guardadas no histórico de união de outros perfis.
 
-Tudo acontece numa única transação no banco. Os PDFs são apagados logo em seguida; se o armazenamento falhar, ficam numa fila e são removidos na próxima tentativa. A Talentia também pede ao provedor de IA a exclusão das leituras guardadas (que expiram em até 29 dias). Não apaga cópias que já saíram do sistema, candidaturas ainda pendentes na fila nem backups do provedor. Ainda não há prazo de retenção automático.
+Tudo acontece numa única transação no banco. Os PDFs são apagados logo em seguida; se o armazenamento falhar, ficam numa fila e são removidos na próxima tentativa. A Talentia também pede ao provedor de IA a exclusão das leituras guardadas (que expiram em até 29 dias). Não apaga cópias que já saíram do sistema, candidaturas ainda pendentes na fila nem backups do provedor. Os prazos automáticos estão em "Retenção automática".
 
 Validação: scripts/candidate-erasure.test.mjs, tests/browser/candidate-erasure.spec.ts (APIs simuladas) e supabase/tests/candidate-erasure.sql. Detalhes: docs/agents/reviews/2026-10-15-claude-exclusao-candidato.md.
+
+## Retenção automática
+
+Todos os dias às 00h15 (Brasília), o banco apaga dados que já cumpriram sua finalidade. Cada execução registra só as quantidades, sem dados pessoais.
+
+| Dado | Prazo | O que acontece |
+| --- | --- | --- |
+| Candidatura por link nunca revisada | 60 dias após o envio | Apagada, com o PDF |
+| Dados declarados de candidatura aceita | 30 dias após o aceite, com a importação concluída | Apagados; já estão no perfil |
+| Registro de candidatura descartada (sem dados pessoais) | 12 meses | Apagado |
+| Resposta a link de atualização já revisada | 30 dias após a revisão | Resposta limpa; o link é apagado após 12 meses |
+| Link de atualização ou de candidatura expirado, cancelado ou sem resposta | 90 dias | Apagado |
+| Importação de PDF com falha | 30 dias | Registro e PDF apagados |
+| Perfil sem nenhuma atividade | 24 meses | **Não é apagado.** Aparece em Saúde da base ("Sem atividade há 24 meses") para você confirmar o interesse da pessoa ou excluir os dados |
+
+Os prazos são uma sugestão operacional, não uma orientação jurídica; ajuste conforme a política da sua empresa. Para mudar um prazo, altere a função private.apply_retention com uma nova migração e atualize esta tabela.
+
+Validação: scripts/data-retention.test.mjs e supabase/tests/data-retention.sql. Detalhes: docs/agents/reviews/2026-10-15-claude-retencao-automatica.md.
 
 ## Busca assistida por experiências relacionadas
 

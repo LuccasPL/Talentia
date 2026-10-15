@@ -232,3 +232,5 @@ body{background:var(--background);color:var(--foreground)}
 
 /* Permanent erasure (profile Data tab) */
 .erase-panel{border:1px solid #efd2d2;border-radius:16px;padding:16px 18px;margin-top:22px;background:#fffafa}.erase-panel summary{display:flex;align-items:center;gap:8px;cursor:pointer;color:#8a3b3b;font-weight:600}.erase-panel ul{margin:8px 0 12px 18px;list-style:disc;line-height:1.7;font-size:.9rem}.erase-panel p{font-size:.9rem;line-height:1.7;margin:10px 0}.erase-panel fieldset{min-width:0;border:0;padding:0;margin:0}.erase-button{margin-top:12px;border-color:#d9a6a6;color:#8a3b3b}.erase-button:hover{background:#fbeeee}
+.health-retention{margin-top:8px;font-size:.82rem;line-height:1.6;color:#8a5a2b;background:#fbf3ea;border-radius:10px;padding:8px 10px}
+.health-summary button:last-child:nth-child(3n+1){grid-column:1/-1}

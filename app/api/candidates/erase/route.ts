@@ -3,21 +3,8 @@ import {owner,database,readData,checkOrigin,readJson,apiError,HttpError} from '@
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {planErasure,confirmsName,erasureGroup} from '@/lib/candidate-erasure';
 import {deleteProviderBatches} from '@/lib/import-server';
+import {sweepFiles} from '@/lib/file-cleanup';
 export const maxDuration=60;
-
-// Removes queued files of this account from the private bucket; returns how many are still pending.
-async function sweepFiles(id:string){
- const db=await database();
- const pending=await db.from('pending_file_deletions').select('file_key').eq('owner',id).limit(100);
- if(pending.error)return -1;
- const keys=pending.data.map(r=>r.file_key as string).filter(k=>k.startsWith(`${id}/`));
- if(!keys.length)return 0;
- const removed=await db.storage.from('curriculos').remove(keys);
- if(removed.error)return keys.length;
- // Storage reports what it deleted; files already gone are also safe to dequeue.
- await db.from('pending_file_deletions').delete().eq('owner',id).in('file_key',keys);
- return 0;
-}
 
 export async function POST(request:Request){try{
  checkOrigin(request);const id=await owner();await enforceRateLimit('write');
