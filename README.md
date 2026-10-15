@@ -114,6 +114,18 @@ O link não comprova identidade e qualquer pessoa que o tenha pode enviar. Aceit
 
 Validação: scripts/candidate-applications.test.mjs, tests/browser/candidate-applications.spec.ts (APIs simuladas) e supabase/tests/candidate-applications.sql (executar dentro de BEGIN/ROLLBACK). Migração: supabase/migrations/20261015170000_candidate_applications.sql.
 
+## Exclusão de dados a pedido do candidato
+
+Na aba Dados do perfil, "Excluir dados desta pessoa" apaga de forma definitiva, depois de a recrutadora digitar o nome completo:
+- o perfil, os perfis duplicados unidos a ele e os PDFs no armazenamento;
+- contatos, notas, entrevistas, pareceres, decisões do cliente e comparações em todas as vagas;
+- o histórico de importação, a candidatura aceita e os links de atualização;
+- as cópias guardadas no histórico de união de outros perfis.
+
+Tudo acontece numa única transação no banco. Os PDFs são apagados logo em seguida; se o armazenamento falhar, ficam numa fila e são removidos na próxima tentativa. A Talentia também pede ao provedor de IA a exclusão das leituras guardadas (que expiram em até 29 dias). Não apaga cópias que já saíram do sistema, candidaturas ainda pendentes na fila nem backups do provedor. Ainda não há prazo de retenção automático.
+
+Validação: scripts/candidate-erasure.test.mjs, tests/browser/candidate-erasure.spec.ts (APIs simuladas) e supabase/tests/candidate-erasure.sql. Detalhes: docs/agents/reviews/2026-10-15-claude-exclusao-candidato.md.
+
 ## Busca assistida por experiências relacionadas
 
 Banco de talentos e seleção para uma vaga oferecem um pedido em texto livre. O Claude sugere até 8 grupos de termos profissionais, com até 8 alternativas por grupo. A recrutadora revisa ou monta os termos manualmente antes de aplicar. Nesta etapa há expansão de consultas e recuperação textual local, sem embeddings nem nova comparação de todos os currículos. Apenas o pedido é enviado ao Claude; não são enviados currículos nesta chamada. A API exige autenticação, acesso autorizado à IA, mesma origem, limites de uso e validação da saída, incluindo rejeição de atributos pessoais protegidos.

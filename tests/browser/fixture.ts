@@ -7,6 +7,7 @@ import {saveTriage,triageSource} from '../../lib/candidate-triage';
 import {preserveJourney,changeJobLifecycle,saveEvaluation,recordClientAction,evaluationSource} from '../../lib/recruitment-journey';
 import {reconcileReportReviews,reportSources} from '../../lib/report-review';
 import {blankConditions} from '../../lib/candidate-refresh';
+import {planErasure,confirmsName} from '../../lib/candidate-erasure';
 import type {ApplicationLink,CandidateApplication,DiscardedApplication} from '../../lib/candidate-applications';
 const hash=(s:string)=>createHash('sha256').update(s).digest('hex');
 export const candidateId='00000000-0000-4000-8000-000000000001';
@@ -37,6 +38,15 @@ export const test=base.extend<{sandbox:Sandbox}>({
     if(url.pathname==='/api/candidates'&&req.method()==='POST'){
      const body=req.postDataJSON();if(!body.candidate?.name?.trim())return await reply({error:'Informe o nome.'},400);
      state.data={...state.data,candidates:[...state.data.candidates,{...body.candidate,id:randomUUID(),updated:new Date().toISOString()}],version:state.data.version!+1};return await reply(state.data);
+    }
+    // Erasure: simulated workspace change only (storage, imports and provider deletion are covered by SQL tests).
+    if(url.pathname==='/api/candidates/erase'&&req.method()==='POST'){
+     const b=req.postDataJSON();if(b.version!==state.data.version)return await reply({error:'Seu espaço mudou. Recarregue antes de excluir.'},409);
+     const target=state.data.candidates.find(c=>c.id===b.candidateId);if(!target||!confirmsName(target,b.confirmName))return await reply({error:'Digite o nome completo do candidato para confirmar a exclusão.'},400);
+     const plan=planErasure(state.data,b.candidateId),gone=new Set(plan.ids),rewritten=new Map(plan.rewritten.map(r=>[r.id,r.payload]));
+     const keep=(list:Data['candidates'])=>list.filter(c=>!gone.has(c.id)).map(c=>rewritten.get(c.id)||c);
+     state.data={...state.data,candidates:keep(state.data.candidates),archivedCandidates:keep(state.data.archivedCandidates||[]),jobs:plan.jobs,records:plan.records,version:state.data.version!+1};
+     return await reply({data:state.data,warnings:[]});
     }
     if(url.pathname==='/api/candidates'&&req.method()==='PATCH'){
      const input=candidateEditSchema.parse(req.postDataJSON());

@@ -83,3 +83,11 @@ export async function retryImport(owner:string,id:string){
  if(file.data.size>MAX_PDF_BYTES)throw new HttpError('Selecione um PDF de até 2 MB.');
  await submitImport(row,new Uint8Array(await file.data.arrayBuffer()));
 }
+// Erasure: ask the provider to delete stored batch results (kept up to 29 days). Best effort; returns how many failed.
+export async function deleteProviderBatches(ids:string[]){
+ let failed=0;
+ for(const id of ids.filter(id=>/^msgbatch_[a-zA-Z0-9]+$/.test(id))){
+  try{await anthropic(`/${id}`,{method:'DELETE'})}catch{failed++}
+ }
+ return failed;
+}
