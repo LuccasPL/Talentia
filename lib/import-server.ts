@@ -6,6 +6,8 @@ import {SYSTEM} from './claude';
 import {pdfSchema,pdfContent} from './pdf-extraction';
 import {MAX_PDF_BYTES,batchExtraction} from './pdf-import';
 import {candidateSchema} from './validation';
+import {declaredCandidate} from './candidate-applications';
+import type {Candidate} from './domain';
 type StoredImport={id:string;owner:string;source:string;file_key:string;status:string;batch_id:string|null;batch_signature?:string;candidate_id:string;error:string;created_at:string};
 function signature(row:StoredImport,batch:string){return createHmac('sha256',process.env.ANTHROPIC_API_KEY||'').update(JSON.stringify([row.owner,row.id,row.file_key,row.candidate_id,batch])).digest('hex');}
 async function anthropic(path:string,init:RequestInit={}){
@@ -51,9 +53,16 @@ export async function syncImports(owner:string){
    await db.from('pdf_imports').update({error:''}).eq('owner',owner).eq('id',row.id);
    if(batch.processing_status!=='ended')continue;
    const response=await anthropic(`/${row.batch_id}/results`);
-   let candidate;
+   let candidate:Candidate;
    try{const extracted=candidateSchema.pick({name:true,role:true,city:true,text:true,phone:true,email:true}).parse(batchExtraction(await response.text(),row.id));candidate=candidateSchema.parse({...extracted,id:row.candidate_id,source:row.source,updated:new Date().toISOString(),demo:false,fileKey:row.file_key});}
    catch{await db.from('pdf_imports').update({status:'failed',error:'O PDF não pôde ser lido por completo. Confira o arquivo e tente novamente.'}).eq('owner',owner).eq('id',row.id);continue;}
+   // PDFs accepted from an application link carry the contacts the candidate declared in the form.
+   // Only those imports query the applications table, so ordinary imports never depend on it.
+   if(row.source.startsWith('Candidatura · ')){
+    const application=await db.from('candidate_applications').select('response,job_title,created_at').eq('owner',owner).eq('import_id',row.id).maybeSingle();
+    if(application.error)throw new HttpError('Não foi possível conferir a candidatura deste PDF. A leitura será recuperada na próxima atualização.',503);
+    if(application.data)candidate=declaredCandidate(candidate,application.data,new Date().toISOString());
+   }
    const result=await db.rpc('complete_pdf_import',{import_id:row.id,new_payload:candidate});
    if(result.error)throw new HttpError('Não foi possível salvar o perfil. A leitura será recuperada na próxima atualização.',503);
    completed=true;

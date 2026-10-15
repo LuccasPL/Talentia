@@ -88,6 +88,24 @@ Atualizações recebidas reúne até 100 respostas pendentes para revisão, com 
 Validação: scripts/candidate-refresh.test.mjs e supabase/tests/candidate-refresh.sql (executar dentro de BEGIN/ROLLBACK), incluindo isolamento de contas, acesso anônimo negado à tabela, tokens inválidos/expirados/cancelados, uso único e concorrência. A atualização por link é a primeira etapa do roteiro competitivo; recuperação vetorial por significado, portal externo para clientes, sincronização de comunicação/agenda e operação independente de importações continuam como etapas futuras.
 
 
+## Candidaturas por link
+
+Em **Candidaturas por link** (grupo Banco de talentos), a recrutadora escolhe a vaga, informa o nome que os candidatos verão, a validade (7, 14 ou 30 dias) e o limite de envios (10, 50 ou 200), e cria um link para divulgar onde preferir. O token aparece uma única vez, no fragmento da URL de `/candidatura`, e o banco guarda apenas o hash SHA-256. A página mostra o título e as condições salvas da vaga. Quem abrir informa nome, telefone e/ou e-mail, cidade, cargo e mensagem (opcionais), anexa um PDF de até 2 MB e consente com a guarda dos dados.
+
+Os envios ficam numa fila privada, com o PDF guardado fora dos esquemas expostos (`private.application_files`), e **não entram no banco de talentos sozinhos**. Na fila, a recrutadora vê os dados declarados e avisos de possível perfil já cadastrado (mesmo PDF, e-mail, telefone ou, na falta deles, nome). Ela então:
+- **aceita**: o PDF vai para o bucket privado e entra na mesma importação monitorada com Claude. Ao concluir, o perfil recebe os contatos declarados, sem marcá-los como verificados;
+- **descarta**: o PDF é apagado.
+
+Limites:
+- cada link aceita até 30 envios por hora e 600 aberturas por hora;
+- reenviar o mesmo PDF pelo mesmo link não gera uma nova candidatura;
+- novos envios são recusados enquanto houver 100 candidaturas pendentes;
+- cada conta pode ter até 20 links ativos.
+
+O link não comprova identidade e qualquer pessoa que o tenha pode enviar. Aceitar exige a leitura de PDF com Claude liberada para a conta. A candidatura aceita não cria registro na vaga: compare o perfil na vaga como qualquer outro. Não há captcha nem limite por IP. Ainda não é possível baixar o PDF antes de aceitar.
+
+Validação: scripts/candidate-applications.test.mjs, tests/browser/candidate-applications.spec.ts (APIs simuladas) e supabase/tests/candidate-applications.sql (executar dentro de BEGIN/ROLLBACK). Migração: supabase/migrations/20261015170000_candidate_applications.sql.
+
 ## Busca assistida por experiências relacionadas
 
 Banco de talentos e seleção para uma vaga oferecem um pedido em texto livre. O Claude sugere até 8 grupos de termos profissionais, com até 8 alternativas por grupo. A recrutadora revisa ou monta os termos manualmente antes de aplicar. Nesta etapa há expansão de consultas e recuperação textual local, sem embeddings nem nova comparação de todos os currículos. Apenas o pedido é enviado ao Claude; não são enviados currículos nesta chamada. A API exige autenticação, acesso autorizado à IA, mesma origem, limites de uso e validação da saída, incluindo rejeição de atributos pessoais protegidos.
