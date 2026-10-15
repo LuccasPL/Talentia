@@ -95,3 +95,34 @@ Pedido do usuário: "siga então", ou seja, continuar com as limitações listad
 **Riscos considerados:**
 - O PDF vem de terceiros e é servido inline na mesma origem, como os CVs já importados. O visualizador de PDF do navegador não executa conteúdo com acesso à origem.
 - Não foi adicionado `Content-Security-Policy: sandbox`, porque isso quebra o visualizador do Chrome.
+
+
+## Rodada 3 — redesign da página pública `/candidatura` (15/10/2026)
+
+**Pedido do usuário:** a página estava "feia e fora do padrão de cores do site" e precisava de revisão de design e responsividade.
+
+**Problemas encontrados:**
+- A marca "talentia." ficava **invisível**: a regra global `.brand{color:#fff}`, feita para a barra lateral escura, aparecia sobre o cartão branco. A página `/atualizar` tinha o mesmo defeito.
+- Os títulos não usavam a fonte serifada do site (`--talent-title`, Georgia).
+- O layout era uma coluna genérica, diferente do login.
+
+**O que mudou** (não houve mudança de API, banco ou regras):
+
+| Arquivo | O que mudou |
+| --- | --- |
+| `app/candidatura/application-form.tsx` | Reescrito com a identidade do login:<br>• cabeçalho com a marca e o selo "Revisado por uma pessoa";<br>• no desktop, duas colunas: à esquerda o título da vaga em Georgia, o texto de apresentação e as condições com ícones (fica fixa ao rolar); à direita o formulário em cartão;<br>• área de anexo com arrastar e soltar, nome e tamanho do arquivo e opção de remover;<br>• consentimento destacado e botão grande;<br>• telas próprias para "Candidatura enviada." e "Link indisponível.".<br>A lógica de envio, os campos e a validação continuam os mesmos. |
+| `app/candidatura/page.tsx` | O `<main>` passou a usar a classe `apply-page`. |
+| `app/globals.css` | Bloco `/* Public application page (/candidatura) … */` com as classes `apply-*`, isoladas e sem afetar outras telas. Pontos de quebra: 900px (uma coluna) e 600px (celular: campos e condições em uma coluna, respiro lateral de 16px). Também foi acrescentado `.candidate-public-card .brand{color:#593b50}`, que torna a marca visível em `/atualizar`. |
+| `tests/gallery/candidatura.html` e `tests/gallery/candidatura.tsx` | **Novos.** Página da galeria de testes que renderiza a página pública. Com `?mock=1`, simula uma vaga fictícia para pré-visualizar o design localmente; sem esse parâmetro, quem responde às APIs é o fixture do Playwright. |
+| `tests/browser/fixture.ts` | Exporta `applicationToken`, ganhou `publicSubmissions` e simula `POST /api/public/applications` (consulta em JSON e envio em multipart). |
+| `tests/browser/application-page.spec.ts` | **Novo.** Testa o envio completo, conferindo a resposta enviada, o nome do PDF, que o token sai da URL e que não há rolagem horizontal. Também testa a recusa de arquivo que não é PDF e a tela de link indisponível, em desktop e celular. |
+
+**Conferência visual** (navegador embutido, com a galeria e `?mock=1`):
+- 1280px e 375px, sem rolagem horizontal;
+- arquivo anexado, consentimento, envio, tela de sucesso e tela de link inválido.
+
+Durante a conferência, o botão parecia esmaecido mesmo habilitado. Não era defeito: a transição de opacidade do `Button` ficava congelada no painel de pré-visualização e, ao terminar, a opacidade volta a 1.
+
+**Verificação:** `npm run test:agent` com 7/7 etapas aprovadas (213 testes de regra, 68 de navegador).
+
+**Para rodar a pré-visualização:** `.claude/launch.json` fica na pasta acima do repositório (`SaaS Recrutamento/.claude`) e sobe a galeria na porta 4173. Pare essa pré-visualização antes de rodar o Playwright, que usa a mesma porta.

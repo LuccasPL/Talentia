@@ -11,10 +11,12 @@ import type {ApplicationLink,CandidateApplication} from '../../lib/candidate-app
 const hash=(s:string)=>createHash('sha256').update(s).digest('hex');
 export const candidateId='00000000-0000-4000-8000-000000000001';
 export function fictionalData():Data{return {version:1,aiConfigured:true,clients:[],records:[],candidates:[{id:candidateId,name:'Pessoa Fictícia Alfa',role:'Atendimento',city:'São Paulo',phone:'',email:'',source:'Cadastro manual',updated:'2026-10-15',demo:false,text:'PERFIL FICTÍCIO. Atendimento ao público e demonstração de produtos em loja de exemplo.'}],jobs:[{...starterJob,id:'teste-vaga',title:'Vaga Fictícia Alfa',description:'Experiência com atendimento ao público.',criteria:[{id:'criterio-atendimento',text:'Experiência com atendimento ao público',kind:'experiencia',priority:'obrigatorio'}],analyses:[],stage:1}]};}
-type Sandbox={data:Data;failNextSave:boolean;unexpected:string[];candidateSaveGate?:Promise<void>;applicationLinks:ApplicationLink[];applications:CandidateApplication[];applicationActions:string[]};
+type Sandbox={data:Data;failNextSave:boolean;unexpected:string[];candidateSaveGate?:Promise<void>;applicationLinks:ApplicationLink[];applications:CandidateApplication[];applicationActions:string[];publicSubmissions:{answer:unknown;fileName:string;fileSize:number}[]};
+// Public application page (/candidatura.html in the gallery): only this token opens the fictitious vacancy.
+export const applicationToken='f'.repeat(64);
 export const test=base.extend<{sandbox:Sandbox}>({
  sandbox:[async({context},use)=>{
-  const state:Sandbox={data:fictionalData(),failNextSave:false,unexpected:[],applicationLinks:[],applications:[],applicationActions:[]};
+  const state:Sandbox={data:fictionalData(),failNextSave:false,unexpected:[],applicationLinks:[],applications:[],applicationActions:[],publicSubmissions:[]};
   context.on('page',page=>page.on('pageerror',error=>state.unexpected.push(`Erro da interface: ${error.message}`)));
   await context.route('**/*',async route=>{
    const req=route.request(),url=new URL(req.url());
@@ -58,6 +60,13 @@ export const test=base.extend<{sandbox:Sandbox}>({
     }
     if(url.pathname==='/api/imports'&&['GET','PATCH'].includes(req.method()))return await reply({imports:[],candidates:[]});
     if(url.pathname==='/api/candidate-refresh'&&req.method()==='GET')return await reply({links:[]});
+    if(url.pathname==='/api/public/applications'&&req.method()==='POST'){
+     const unavailable={error:'Este link não está recebendo candidaturas. Ele pode ter expirado, sido cancelado ou atingido o limite de envios. Fale com a recrutadora.'};
+     if(req.headers()['content-type']?.startsWith('application/json')){const b=req.postDataJSON();return await reply(b.token===applicationToken?{context:{title:'Vaga Fictícia Alfa',recruiter:'Recrutadora Fictícia',conditions:{...blankConditions,workMode:'Presencial',schedule:'Escala 6x1'}},expiresAt:'2026-10-29T12:00:00Z'}:unavailable,b.token===applicationToken?200:410);}
+     const body=req.postDataBuffer()?.toString('latin1')||'';const token=/name="token"\r\n\r\n([a-f0-9]{64})/.exec(body)?.[1];const answer=/name="answer"\r\n\r\n([\s\S]*?)\r\n--/.exec(body)?.[1];const file=/name="file"; filename="([^"]*)"\r\nContent-Type: [^\r]*\r\n\r\n([\s\S]*?)\r\n--/.exec(body);
+     if(token!==applicationToken)return await reply(unavailable,410);
+     state.publicSubmissions.push({answer:answer?JSON.parse(Buffer.from(answer,'latin1').toString('utf8')):null,fileName:file?.[1]||'',fileSize:file?.[2].length||0});return await reply({received:true});
+    }
     // Application links: simulated queue only. Accepting records the action; the real import is not simulated.
     if(url.pathname==='/api/applications'&&req.method()==='GET')return await reply({links:state.applicationLinks,applications:state.applications.filter(a=>!a.reviewed_at),serverTime:new Date().toISOString()});
     if(url.pathname==='/api/applications'&&req.method()==='POST'){
