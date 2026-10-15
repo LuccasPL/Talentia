@@ -27,14 +27,35 @@ Migração `supabase/migrations/20261015151001_public_application_gateway.sql`. 
 
 A chave real foi gerada localmente com `crypto.randomBytes(48)` em base64url (64 caracteres) e gravada **apenas** em `talentia/.env.local`, que é ignorado pelo git, como `TALENTIA_PUBLIC_GATEWAY_SECRET`. O hash dela foi inserido em `private.gateway_keys` em produção. O valor nunca foi mostrado no chat nem versionado.
 
-### Fase B — preparada, **NÃO aplicada**
+### Fase B — **aplicada em produção** em 15/10/2026
 
-Migração `supabase/migrations/20261015180000_close_direct_application_rpcs.sql`. Ela revoga o acesso `anon` e remove `access_application_link` e `submit_application`, nas versões public e private. **Aplicar somente depois** que:
-1. a variável `TALENTIA_PUBLIC_GATEWAY_SECRET` estiver configurada na Vercel (Production) com o mesmo valor do `.env.local`;
-2. o código desta entrega estiver publicado;
-3. `/candidatura` tiver sido conferida em produção (abrir e enviar).
+Migração `supabase/migrations/20261015152948_close_direct_application_rpcs.sql`, com o nome de arquivo igual à versão remota. Ela revoga o acesso `anon` e remove `access_application_link` e `submit_application`, nas versões public e private. Foi aplicada nesta ordem:
+1. o usuário configurou `TALENTIA_PUBLIC_GATEWAY_SECRET` na Vercel (Production);
+2. o commit `f774582` foi publicado e a Vercel registrou "Deployment has completed";
+3. foi feito um teste ponta a ponta em produção (abaixo);
+4. a fase B foi aplicada.
 
-Até a fase B ser aplicada, a porta antiga continua aberta para quem chamar o Supabase diretamente.
+**Teste ponta a ponta em produção, antes da fase B.** Um link temporário ("Teste técnico — pode ignorar", válido por 30 min) foi criado direto no banco para a conta que já tinha um link, e as chamadas foram feitas por HTTP no site publicado:
+- a visualização devolveu o contexto e o `formToken`;
+- envio antes de 4 s: 400;
+- PDF com `/JavaScript`: 400 ("scripts");
+- honeypot preenchido: 200, sem gravar nada;
+- `formToken` forjado: 410;
+- envio válido depois de 5 s: 200.
+
+No banco ficaram exatamente **1** candidatura, **1** PDF privado e `submission_count=1`. Só o envio válido chegou à RPC: as recusas acontecem no servidor, antes dela. Em seguida, a candidatura, o link de teste e os contadores da última hora foram apagados. Restou apenas o link original da usuária.
+
+**Depois da fase B**, com chamadas diretas ao REST do Supabase usando a chave publicável:
+- `rpc/submit_application`: 404 (PGRST202);
+- `rpc/access_application_link`: 404;
+- `rpc/application_submit` com chave errada: 200 com `{"error":"gateway"}`;
+- `rpc/count_public_attempt`: 404, porque não está exposta.
+
+O site continuou respondendo 410 para link inválido, o que confirma que a chave da Vercel é a certa (com a chave errada seria 503). `check-production.mjs` passou.
+
+**Advisors depois da fase B:**
+- INFO "RLS enabled no policy" em `private.gateway_keys` e `private.public_attempts`: é intencional, porque não há acesso direto, como em `application_files` e `api_limits`;
+- WARN de senhas vazadas: aviso anterior, sem mudança.
 
 Ao aplicar, renomeie o arquivo para a versão que o Supabase registrar.
 
