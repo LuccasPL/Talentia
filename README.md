@@ -102,7 +102,7 @@ Limites:
 - novos envios são recusados enquanto houver 100 candidaturas pendentes;
 - cada conta pode ter até 20 links ativos.
 
-O link não comprova identidade e qualquer pessoa que o tenha pode enviar. Aceitar exige a leitura de PDF com Claude liberada para a conta. A candidatura aceita não cria registro na vaga: compare o perfil na vaga como qualquer outro. Não há captcha nem limite por IP. Ainda não é possível baixar o PDF antes de aceitar.
+O link não comprova identidade e qualquer pessoa que o tenha pode enviar. Aceitar exige a leitura de PDF com Claude liberada para a conta. A candidatura aceita não cria registro na vaga: compare o perfil na vaga como qualquer outro. Não há captcha nem limite por IP. Antes de decidir, o botão Abrir PDF enviado mostra o arquivo da fila, apenas para a dona da conta e enquanto a candidatura estiver pendente. O menu mostra quantas candidaturas aguardam revisão.
 
 Validação: scripts/candidate-applications.test.mjs, tests/browser/candidate-applications.spec.ts (APIs simuladas) e supabase/tests/candidate-applications.sql (executar dentro de BEGIN/ROLLBACK). Migração: supabase/migrations/20261015170000_candidate_applications.sql.
 

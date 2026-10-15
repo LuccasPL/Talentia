@@ -26,6 +26,9 @@ test('applications: duplicates are flagged and nothing changes until the recruit
  await open(page);
  await expect(page.getByText('2 candidaturas aguardando sua revisão.',{exact:false})).toBeVisible();
  const alfa=page.locator('article.application-item').filter({hasText:'Pessoa Fictícia Alfa'}),gama=page.locator('article.application-item').filter({hasText:'Pessoa Fictícia Gama'});
+ const desktop=page.viewportSize()!.width>=768;
+ if(desktop)await expect(page.getByRole('button',{name:'Candidaturas por link 2',exact:true})).toBeVisible();
+ await expect(alfa.getByRole('link',{name:'Abrir PDF enviado',exact:true})).toHaveAttribute('href','/api/applications/a1/file');
  await expect(alfa.getByText('Possível perfil já cadastrado:',{exact:true})).toBeVisible();
  await expect(alfa.getByRole('button',{name:'Pessoa Fictícia Alfa (mesmo nome)',exact:true})).toBeVisible();
  await expect(gama.getByText('Possível perfil já cadastrado:',{exact:true})).toHaveCount(0);
@@ -35,6 +38,7 @@ test('applications: duplicates are flagged and nothing changes until the recruit
  page.once('dialog',dialog=>void dialog.accept());
  await alfa.getByRole('button',{name:'Descartar',exact:true}).click();
  await expect(alfa).toHaveCount(0);
+ if(desktop)await expect(page.getByRole('button',{name:'Candidaturas por link 1',exact:true})).toBeVisible();
  page.once('dialog',dialog=>void dialog.accept());
  await gama.getByRole('button',{name:'Aceitar e importar currículo',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Nenhuma candidatura pendente.',exact:true})).toBeVisible();

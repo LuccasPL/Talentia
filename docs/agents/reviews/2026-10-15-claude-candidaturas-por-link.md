@@ -70,8 +70,28 @@ Sem a migração, a tela "Candidaturas por link" e o `/candidatura` respondem 50
 
 ## Limitações conhecidas e próximos passos
 
-- Não é possível ver ou baixar o PDF antes de aceitar.
 - A candidatura aceita não cria registro (`RecordData`) na vaga.
-- Não há contador de pendentes na navegação.
 - Não há captcha nem limite por IP.
 - O `syncImports` só roda com o app aberto (limitação já existente da importação).
+- Os dois itens "ver o PDF antes de aceitar" e "contador no menu" foram resolvidos na rodada 2, abaixo.
+
+## Rodada 2 — ver o PDF antes de aceitar e contador no menu (15/10/2026)
+
+Pedido do usuário: "siga então", ou seja, continuar com as limitações listadas acima. Não houve migração nova.
+
+| Arquivo | Tipo | O que mudou |
+| --- | --- | --- |
+| `app/api/applications/[id]/file/route.ts` | **novo** | `GET` só para a dona da conta: lê o PDF pendente pela RPC `application_file` (devolve `null` depois da revisão ou para outra conta), confere o `%PDF-` e responde `application/pdf`, `inline`, `no-store` e `nosniff`, com os mesmos cabeçalhos de `/api/files/[id]`. Rate limit `read`. |
+| `app/candidate-applications.tsx` | editado | Link "Abrir PDF enviado" (nova aba, `noopener noreferrer`) em cada candidatura. Nova prop `onPending(count)`, chamada via ref sempre que a fila é carregada. |
+| `lib/server.ts` | editado | `readData` passa a devolver `pendingApplications`, por uma contagem `head` em `candidate_applications`. Se essa consulta falhar, o valor é 0 e **não** derruba o carregamento do espaço. |
+| `lib/domain.ts` | editado | `Data.pendingApplications?: number`. |
+| `app/workspace.tsx` | editado | Contador `nav-count` em "Candidaturas por link" quando é maior que 0, mais `onPending` → `setData`. Atenção: com o contador, o nome acessível do botão vira "Candidaturas por link N". |
+| `app/globals.css` | editado | `.application-pdf`. |
+| `tests/browser/candidate-applications.spec.ts` | editado | Confere o `href` do PDF e, no desktop, o contador 2 → 1 depois de descartar. |
+| `README.md` | editado | Limitação atualizada. |
+
+**Verificação:** `npm run test:agent` com 7/7 etapas aprovadas (213 testes de regra, 64 de navegador).
+
+**Riscos considerados:**
+- O PDF vem de terceiros e é servido inline na mesma origem, como os CVs já importados. O visualizador de PDF do navegador não executa conteúdo com acesso à origem.
+- Não foi adicionado `Content-Security-Policy: sandbox`, porque isso quebra o visualizador do Chrome.

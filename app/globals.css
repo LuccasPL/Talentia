@@ -182,3 +182,4 @@ body{background:var(--background);color:var(--foreground)}
 
 /* Application links and review queue */
 .applications-panel{padding:24px;margin:22px 0;min-width:0}.applications-panel fieldset{min-width:0}.applications-panel .two-fields{margin-bottom:4px}.applications-panel .refresh-answer-grid dd{overflow-wrap:anywhere}.application-duplicates{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin:12px 0}.application-duplicates .text-button{text-align:left;overflow-wrap:anywhere}@media(max-width:767px){.applications-panel{padding:20px 16px}.applications-panel .two-fields{grid-template-columns:1fr}.applications-panel .report-actions button{width:100%;white-space:normal;height:auto;min-height:44px}}
+.application-pdf{display:inline-block;margin-top:12px}
