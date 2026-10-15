@@ -200,3 +200,5 @@ A aba Triagem registra decisão humana por candidato e vaga, motivo, próxima a�
 
 ### Checklist do briefing
 Cada vaga pode registrar quantidade de posições, prazo de apresentação, responsável pela decisão do cliente e pendências internas. O checklist considera oito campos estruturados e distingue preenchimento de confirmação. Os acordos usam o salvamento versionado existente, não alteram critérios nem análises e não são incluídos em links para candidatos ou no parecer. O painel mostra o prazo em Brasília; vagas preenchidas ou canceladas não recebem alerta de atraso. Campos opcionais preservam a compatibilidade com vagas anteriores.
+### Verificações automatizadas
+Execute `npm run test:agent` para a bateria local completa. Ela combina os testes de regras com navegação em computador/celular e verificações HTTP locais. Relatórios, limites de cobertura e o roteiro de exploração assistida estão em [tests/README.md](tests/README.md). A interface usa dados e serviços fictícios; as integrações reais com Supabase/Claude exigem homologação separada. O workflow do GitHub foi ampliado, mas não configura bloqueio de deployment na Vercel.

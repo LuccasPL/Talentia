@@ -1,5 +1,5 @@
 'use client';
-import {useState} from 'react';
+import {useEffect,useState} from 'react';
 import {ClipboardList,Save,Copy,LoaderCircle} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {toast} from 'sonner';
@@ -7,9 +7,10 @@ import type {Candidate,Job} from '@/lib/domain';
 import {prepareInterviewGuide,interviewItemCurrent,interviewSummary,type InterviewGuide as Guide,type InterviewItem} from '@/lib/interview-guide';
 import {brazilDate} from '@/lib/pt-br';
 import {interviewSession,nextUnansweredQuestion} from '@/lib/interview-session';
-export default function InterviewGuide({candidate,job,saved,onSave}:{candidate:Candidate;job:Job;saved?:Guide;onSave:(guide:Guide)=>Promise<void>}){
+export default function InterviewGuide({candidate,job,saved,onSave,onDirty}:{candidate:Candidate;job:Job;saved?:Guide;onSave:(guide:Guide)=>Promise<void>;onDirty?:(dirty:boolean)=>void}){
  const [draft,setDraft]=useState<Guide|undefined>(()=>saved?structuredClone(saved):undefined),[snapshot,setSnapshot]=useState(()=>JSON.stringify(saved)),[busy,setBusy]=useState(false);
  const dirty=JSON.stringify(draft)!==snapshot;
+ useEffect(()=>{onDirty?.(dirty);return()=>onDirty?.(false)},[dirty,onDirty]);
  const stale=draft&&(draft.candidateRevision!==(candidate.editedAt||candidate.updated)||job.criteria.some(c=>!draft.items.some(i=>i.criterionId===c.id&&i.criterionText===c.text&&i.kind===c.kind)));
  const [focused,setFocused]=useState(false),[activeQuestion,setActiveQuestion]=useState('');
  const session=interviewSession(draft,job),activeIndex=Math.max(0,session.current.findIndex(i=>i.id===activeQuestion)),activeItem=session.current[activeIndex];
