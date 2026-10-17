@@ -16,6 +16,10 @@ Antes de trabalhar em outro computador, clone `https://github.com/LuccasPL/Talen
 
 ## Busca no banco de talentos
 
+Uma busca paginada está disponível em `/buscar` (atalho no Banco de talentos). Nome, cidade e experiência são consultados no Supabase após uma breve pausa ao digitar; Enter ou Buscar executa imediatamente. A resposta contém o total e até 24 resumos, sem contatos nem currículo completo. O perfil completo é carregado somente ao clicar em Ver perfil. A consulta ignora acentos, exige todos os termos de cada campo, exclui cadastros reunidos e respeita a conta autenticada. Ela não chama o Claude.
+
+A busca paginada é a primeira etapa da migração. Os filtros ligados à vaga, a busca assistida e as ações em lote continuam no espaço principal, que ainda carrega a base inteira. Portanto, a nova página permite procurar uma base grande sem abrir esse espaço, mas **não elimina o carregamento completo das demais telas**. Antes de usar milhares de currículos em todos os fluxos, migrar esses filtros e a abertura do espaço para consultas sob demanda; medir latência e plano de execução com uma base sintética representativa.
+
 Combine nome ou palavras do currículo, cidade informada, termos de experiência, pendências na vaga atual e evidência documental para um critério. Busca ignora acentos e exige todos os termos digitados; não é busca semântica nem comprovação de aderência. A lista oferece ordenação por nome/data de importação e páginas de 24 perfis. A comparação envia os IDs de todos os perfis filtrados (até 100), verificados novamente contra a base do proprietário no servidor; análises anteriores de outros perfis são preservadas quando o motor permanece o mesmo. Data de importação não confirma disponibilidade ou validade do contato.
 
 ## Contatos por vaga e PT-BR
