@@ -1,6 +1,6 @@
 import 'server-only';
 import {enforceRateLimit} from './rate-limit';
-import {createHmac,timingSafeEqual} from 'node:crypto';
+import {batchSignature,verifiedBatch,deleteVerifiedBatches,type BatchProof} from './import-batch-integrity';
 import {database,HttpError,requireAiAccess} from './server';
 import {SYSTEM} from './claude';
 import {pdfSchema,pdfContent} from './pdf-extraction';
@@ -9,7 +9,7 @@ import {candidateSchema} from './validation';
 import {declaredCandidate} from './candidate-applications';
 import type {Candidate} from './domain';
 type StoredImport={id:string;owner:string;source:string;file_key:string;status:string;batch_id:string|null;batch_signature?:string;candidate_id:string;error:string;created_at:string};
-function signature(row:StoredImport,batch:string){return createHmac('sha256',process.env.ANTHROPIC_API_KEY||'').update(JSON.stringify([row.owner,row.id,row.file_key,row.candidate_id,batch])).digest('hex');}
+function signature(row:StoredImport,batch:string){return batchSignature(row,batch,process.env.ANTHROPIC_API_KEY||'');}
 async function anthropic(path:string,init:RequestInit={}){
  if(!process.env.ANTHROPIC_API_KEY)throw new HttpError('Conecte o Claude para importar PDFs.',503);
  const response=await fetch(`https://api.anthropic.com/v1/messages/batches${path}`,{...init,cache:'no-store',headers:{'Content-Type':'application/json','x-api-key':process.env.ANTHROPIC_API_KEY,'anthropic-version':'2023-06-01'},signal:AbortSignal.timeout(30000)});
@@ -45,8 +45,7 @@ export async function syncImports(owner:string){
   try{
    // Owner-editable metadata is never sufficient to authorize a provider batch.
    await db.from('pdf_imports').update({checked_at:new Date().toISOString()}).eq('owner',owner).eq('id',row.id);
-   const expected=signature(row,row.batch_id||'');
-   if(!row.batch_id||!/^msgbatch_[a-zA-Z0-9]+$/.test(row.batch_id)||!row.batch_signature||!/^[a-f0-9]{64}$/.test(row.batch_signature)||!timingSafeEqual(Buffer.from(row.batch_signature),Buffer.from(expected))){
+   if(!verifiedBatch(owner,row,process.env.ANTHROPIC_API_KEY||'')){
     await db.from('pdf_imports').update({error:'O acompanhamento desta leitura precisa de verificação. Não reenvie o PDF; solicite suporte.'}).eq('owner',owner).eq('id',row.id);continue;
    }
    const batch=await (await anthropic(`/${row.batch_id}`)).json() as {processing_status:string};
@@ -83,11 +82,17 @@ export async function retryImport(owner:string,id:string){
  if(file.data.size>MAX_PDF_BYTES)throw new HttpError('Selecione um PDF de até 2 MB.');
  await submitImport(row,new Uint8Array(await file.data.arrayBuffer()));
 }
-// Erasure: ask the provider to delete stored batch results (kept up to 29 days). Best effort; returns how many failed.
-export async function deleteProviderBatches(ids:string[]){
- let failed=0;
- for(const id of ids.filter(id=>/^msgbatch_[a-zA-Z0-9]+$/.test(id))){
-  try{await anthropic(`/${id}`,{method:'DELETE'})}catch{failed++}
- }
- return failed;
+// Capture only the relevant owner's import proofs before the erase transaction removes them.
+export async function erasureImportProofs(owner:string,candidateIds:string[],fileKeys:string[]):Promise<BatchProof[]>{
+ const db=await database(),columns='owner,id,file_key,candidate_id,batch_id,batch_signature';
+ const results=await Promise.all([
+  db.from('pdf_imports').select(columns).eq('owner',owner).in('candidate_id',candidateIds),
+  ...(fileKeys.length?[db.from('pdf_imports').select(columns).eq('owner',owner).in('file_key',fileKeys)]:[]),
+ ]);
+ if(results.some(result=>result.error))throw new HttpError('Não foi possível conferir as importações antes de excluir. Nada foi apagado; tente novamente.',503);
+ return [...new Map(results.flatMap(result=>result.data||[]).map(row=>[row.id,row])).values()] as BatchProof[];
+}
+// Best effort: unsigned, altered or missing proofs count as unresolved, without a provider call.
+export async function deleteProviderBatches(owner:string,ids:string[],proofs:BatchProof[]){
+ return deleteVerifiedBatches(owner,ids,proofs,process.env.ANTHROPIC_API_KEY||'',id=>anthropic('/'+id,{method:'DELETE'}));
 }
