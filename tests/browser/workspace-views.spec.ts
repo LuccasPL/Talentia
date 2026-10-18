@@ -35,6 +35,21 @@ test('vacancy filters and pages use server results without loading the whole bas
  expect(sandbox.unexpected).toEqual([]);
 });
 
+test('assisted vacancy search stays paginated and shows matching curriculum excerpts',async({page})=>{
+ const scopes:string[]=[],assistedCalls:string[]=[];
+ page.on('request',request=>{const url=new URL(request.url());if(url.pathname==='/api/workspace'&&request.method()==='GET')scopes.push(url.searchParams.get('scope')||'full');if(url.pathname==='/api/candidates/assisted-vacancy-search')assistedCalls.push(request.method())});
+ await start(page);await talents(page);
+ await page.getByText('Busca assistida por experiências relacionadas',{exact:true}).click();
+ await page.getByRole('button',{name:'Montar busca manualmente',exact:true}).click();
+ await page.getByLabel('Termos relacionados — um por linha, até 8',{exact:true}).fill('demonstração de produtos');
+ await page.getByRole('button',{name:'Aplicar termos revisados',exact:true}).click();
+ await expect(page.getByText('1–1 de 1 perfil',{exact:true})).toBeVisible();
+ await page.getByText('1 experiência com termos encontrados',{exact:true}).click();
+ await expect(page.locator('.search-match-details blockquote')).toContainText('demonstração de produtos em loja de exemplo');
+ expect(assistedCalls).toEqual(['POST']);
+ expect(scopes).toEqual(['overview']);
+});
+
 test('talent pool remains usable before the paging migration is applied',async({page,sandbox})=>{
  sandbox.unavailablePagedSearch=true;
  const scopes:string[]=[];

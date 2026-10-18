@@ -8,6 +8,7 @@ import {preserveJourney,changeJobLifecycle,saveEvaluation,recordClientAction,eva
 import {reconcileReportReviews,reportSources} from '../../lib/report-review';
 import {blankConditions} from '../../lib/candidate-refresh';
 import {filterCandidates,emptyFilters} from '../../lib/candidate-search';
+import {buildSearchIndex,findSearchMatches,searchOrder,validateSearchPlan} from '../../lib/assisted-search';
 import {planErasure,confirmsName} from '../../lib/candidate-erasure';
 import type {ApplicationLink,CandidateApplication,DiscardedApplication} from '../../lib/candidate-applications';
 const hash=(s:string)=>createHash('sha256').update(s).digest('hex');
@@ -49,6 +50,14 @@ export const test=base.extend<{sandbox:Sandbox}>({
      const filters={...emptyFilters,query:url.searchParams.get('query')||'',city:url.searchParams.get('city')||'',experience:url.searchParams.get('experience')||'',pending:url.searchParams.get('pending')||'all',criterionId:url.searchParams.get('criterionId')||'all',onlyEvidence:url.searchParams.get('onlyEvidence')==='true',sort:url.searchParams.get('sort')||'name'};
      const matched=filterCandidates(state.data.candidates,job,state.data.records,filters),page=Number(url.searchParams.get('page')||1);
      return await reply({total:matched.length,candidateIds:matched.length<=100?matched.map(candidate=>candidate.id):[],candidates:matched.slice((page-1)*24,page*24),page,pageSize:24});
+    }
+    if(url.pathname==='/api/candidates/assisted-vacancy-search'&&req.method()==='POST'){
+     const body=req.postDataJSON(),job=state.data.jobs.find(item=>item.id===body.jobId);
+     if(!job)return await reply({error:'Vaga não encontrada.'},404);
+     const plan=validateSearchPlan(body.plan),index=buildSearchIndex(state.data.candidates),matches=findSearchMatches(index,plan,body.mode);
+     const filtered=filterCandidates(state.data.candidates,job,state.data.records,{...emptyFilters,query:body.query||'',city:body.city||'',experience:body.experience||'',pending:body.pending||'all',criterionId:body.criterionId||'all',onlyEvidence:Boolean(body.onlyEvidence),sort:body.sort||'name'}).filter(candidate=>matches.has(candidate.id)).sort((a,b)=>searchOrder(matches.get(a.id),matches.get(b.id))||a.name.localeCompare(b.name,'pt-BR'));
+     const page=Number(body.page||1),selected=body.selection?filtered.slice(0,100):filtered.slice((page-1)*24,page*24);
+     return await reply({total:filtered.length,candidateIds:filtered.length<=100?filtered.map(candidate=>candidate.id):[],candidates:selected,page,pageSize:24,matches:selected.map(candidate=>matches.get(candidate.id))});
     }
     if(url.pathname==='/api/candidates'&&req.method()==='POST'){
      const body=req.postDataJSON();if(!body.candidate?.name?.trim())return await reply({error:'Informe o nome.'},400);
