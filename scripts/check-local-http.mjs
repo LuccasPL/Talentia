@@ -13,7 +13,7 @@ try{
  const root=await fetch(base,{redirect:'manual'});assert.equal(root.status,307);assert.equal(new URL(root.headers.get('location'),base).pathname,'/login');
  const searchPage=await fetch(base+'/buscar',{redirect:'manual'});assert.equal(searchPage.status,307);assert.equal(new URL(searchPage.headers.get('location'),base).pathname,'/login');
  const login=await fetch(base+'/login');assert.equal(login.status,200);assert.match(await login.text(),/Bem-vinda ao seu espaço/);assert.match(login.headers.get('content-security-policy'),/script-src[^;]*'nonce-/);assert.equal(login.headers.get('x-frame-options'),'DENY');assert.equal(login.headers.get('x-content-type-options'),'nosniff');
- const paths=['/api/workspace','/api/candidates/search?query=ana','/api/candidates/00000000-0000-4000-8000-000000000001','/api/candidate-refresh','/api/usage','/api/imports','/api/files/00000000-0000-4000-8000-000000000001'];
+ const paths=['/api/workspace','/api/candidates/search?query=ana','/api/candidates/vacancy-search?jobId=teste-vaga','/api/candidates/00000000-0000-4000-8000-000000000001','/api/candidate-refresh','/api/usage','/api/imports','/api/files/00000000-0000-4000-8000-000000000001'];
  for(const path of paths){const r=await fetch(base+path);assert.equal(r.status,401,`${path}: acesso anônimo`)}
  for(const path of ['/api/workspace','/api/candidates','/api/ai','/api/journey','/api/upload','/api/pipeline']){
   const headers={'Content-Type':'application/json',Origin:base};const same=await fetch(base+path,{method:'POST',headers,body:'{}'});assert.equal(same.status,401,`${path}: sem sessão`);

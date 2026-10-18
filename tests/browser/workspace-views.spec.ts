@@ -6,6 +6,55 @@ async function start(page:Page){await page.goto('/');await expect(page.getByRole
 async function open(page:Page,name:string){const mobile=page.getByRole('button',{name:'Abrir menu completo',exact:true});if(await mobile.isVisible())await mobile.click();await page.getByRole('button',{name,exact:true}).click();}
 async function talents(page:Page){if(page.viewportSize()!.width<768)await page.getByRole('button',{name:'Talentos',exact:true}).click();else await page.getByRole('button',{name:/^Banco de talentos \d/}).click();}
 
+test('workspace opens with related profiles and paginates vacancy browsing',async({page,sandbox})=>{
+ const scopes:string[]=[];
+ page.on('request',request=>{const url=new URL(request.url());if(url.pathname==='/api/workspace'&&request.method()==='GET')scopes.push(url.searchParams.get('scope')||'full')});
+ const searches:string[]=[];
+ page.on('request',request=>{if(new URL(request.url()).pathname==='/api/candidates/vacancy-search')searches.push(request.url())});
+ await start(page);
+ expect(scopes).toEqual(['overview']);
+ await talents(page);
+ await expect(page.getByRole('button',{name:'Ver perfil de Pessoa Fictícia Alfa',exact:true})).toBeVisible();
+ expect(scopes).toEqual(['overview']);
+ expect(searches).toHaveLength(1);
+ expect(sandbox.unexpected).toEqual([]);
+});
+
+test('vacancy filters and pages use server results without loading the whole base',async({page,sandbox})=>{
+ const sample=sandbox.data.candidates[0];
+ sandbox.data.candidates.push(...Array.from({length:4999},(_,index)=>({...sample,id:`00000000-0000-4000-8000-${String(index+2).padStart(12,'0')}`,name:`Pessoa Fictícia ${String(index+2).padStart(4,'0')}`})));
+ const scopes:string[]=[];
+ page.on('request',request=>{const url=new URL(request.url());if(url.pathname==='/api/workspace'&&request.method()==='GET')scopes.push(url.searchParams.get('scope')||'full')});
+ await start(page);await talents(page);
+ await expect(page.getByText('1–24 de 5000 perfis')).toBeVisible();
+ await page.getByRole('button',{name:'Próxima',exact:true}).click();
+ await expect(page.getByText('25–48 de 5000 perfis')).toBeVisible();
+ await page.getByLabel('Buscar candidatos',{exact:true}).fill('Pessoa Fictícia 4999');
+ await expect(page.getByText('1–1 de 1 perfil')).toBeVisible();
+ expect(scopes).toEqual(['overview']);
+ expect(sandbox.unexpected).toEqual([]);
+});
+
+test('talent pool remains usable before the paging migration is applied',async({page,sandbox})=>{
+ sandbox.unavailablePagedSearch=true;
+ const scopes:string[]=[];
+ page.on('request',request=>{const url=new URL(request.url());if(url.pathname==='/api/workspace'&&request.method()==='GET')scopes.push(url.searchParams.get('scope')||'full')});
+ await start(page);await talents(page);
+ await expect(page.getByRole('button',{name:'Ver perfil de Pessoa Fictícia Alfa',exact:true})).toBeVisible();
+ expect(scopes).toEqual(['overview','full']);
+ expect(sandbox.unexpected).toEqual([]);
+});
+
+test('import dialog from the overview waits for the complete base',async({page,sandbox})=>{
+ const scopes:string[]=[];
+ page.on('request',request=>{const url=new URL(request.url());if(url.pathname==='/api/workspace'&&request.method()==='GET')scopes.push(url.searchParams.get('scope')||'full')});
+ await start(page);
+ await page.getByRole('button',{name:'Importar currículos',exact:true}).click();
+ await expect(page.getByRole('dialog',{name:'Adicione à sua base de talentos'})).toBeVisible();
+ expect(scopes).toEqual(['overview','full']);
+ expect(sandbox.unexpected).toEqual([]);
+});
+
 test('contacts: search, clear and register an approach without sending messages',async({page,sandbox})=>{
  await start(page);await open(page,'Contatos');
  const search=page.getByLabel('Buscar contatos',{exact:true});
@@ -27,6 +76,7 @@ test('talent pool: empty search recovers, batch selection counts and shortlist s
  await expect(page.getByRole('heading',{name:'Nenhum perfil nesta busca.',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Ver todos os perfis',exact:true}).click();
  await expect(page.getByRole('button',{name:'Ver perfil de Pessoa Fictícia Alfa',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Selecionar em lote ou comparar',exact:true}).click();
  await page.getByLabel('Selecionar Pessoa Fictícia Alfa para ações em lote',{exact:true}).check();
  await expect(page.getByText('1 selecionado',{exact:true})).toBeVisible();
  const star=page.getByRole('button',{name:'Adicionar Pessoa Fictícia Alfa à lista de interesse',exact:true});
