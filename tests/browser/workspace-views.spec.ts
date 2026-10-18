@@ -20,6 +20,17 @@ test('workspace opens with related profiles and paginates vacancy browsing',asyn
  expect(sandbox.unexpected).toEqual([]);
 });
 
+test('job directory uses related workspace data without loading the whole candidate base',async({page,sandbox})=>{
+ sandbox.data.records.push({candidateId,jobId:'teste-vaga',status:'Não contatado',interest:'Não confirmado',availability:'Não confirmada',notes:'',report:'',events:[]});
+ const scopes:string[]=[];
+ page.on('request',request=>{const url=new URL(request.url());if(url.pathname==='/api/workspace'&&request.method()==='GET')scopes.push(url.searchParams.get('scope')||'full')});
+ await start(page);await open(page,'Vagas');
+ await expect(page.getByRole('heading',{name:'Vaga Fictícia Alfa',exact:true})).toBeVisible();
+ await expect(page.getByText('1 de 1 vaga',{exact:true})).toBeVisible();
+ expect(scopes).toEqual(['overview']);
+ expect(sandbox.unexpected).toEqual([]);
+});
+
 test('vacancy filters and pages use server results without loading the whole base',async({page,sandbox})=>{
  const sample=sandbox.data.candidates[0];
  sandbox.data.candidates.push(...Array.from({length:4999},(_,index)=>({...sample,id:`00000000-0000-4000-8000-${String(index+2).padStart(12,'0')}`,name:`Pessoa Fictícia ${String(index+2).padStart(4,'0')}`})));

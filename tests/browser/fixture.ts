@@ -82,7 +82,7 @@ export const test=base.extend<{sandbox:Sandbox}>({
     }
     if(url.pathname==='/api/ai'){
      const body=req.postDataJSON();if(body.action==='criteria')return await reply({criteria:draftCriteria(body.description),engine:'Simulação determinística · sem IA'});
-     if(body.action==='analyze')return await reply({analyses:termAnalysis(state.data.candidates.filter(c=>body.candidateIds.includes(c.id)),body.criteria),engine:'Simulação determinística · sem IA'});
+     if(body.action==='analyze'){const job=state.data.jobs.find(j=>j.id===body.jobId);if(!job)return await reply({error:'Vaga não encontrada.'},404);const analyses=termAnalysis(state.data.candidates.filter(c=>body.candidateIds.includes(c.id)),job.criteria);state.data={...state.data,version:state.data.version!+1,jobs:state.data.jobs.map(item=>item.id!==job.id?item:{...item,analyses:[...item.analyses,...analyses],stage:2,engine:'Simulação determinística · sem IA'})};return await reply({analyses,engine:'Simulação determinística · sem IA',version:state.data.version});}
     }
     if(url.pathname==='/api/journey'){
      const b=req.postDataJSON(),at=new Date().toISOString();if(b.version!==state.data.version)return await reply({error:'Versão desatualizada.'},409);
