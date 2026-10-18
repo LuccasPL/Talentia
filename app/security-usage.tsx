@@ -4,13 +4,15 @@ import {Download,RefreshCw,ShieldCheck,Sparkles} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogDescription} from '@/components/ui/dialog';
 import {usageSnapshotSchema,usageLabel,usagePercent,renewalLabel,effectiveAiRemaining,type UsageSnapshot} from '@/lib/usage-status';
+import {aiUsageSummarySchema,aiTaskLabels,estimatedCostUsd,type AiUsageSummary} from '@/lib/ai-usage';
 
-type Snapshot=UsageSnapshot&{aiEnabled:boolean};
+type Snapshot=UsageSnapshot&{aiEnabled:boolean;aiUsage:AiUsageSummary};
 async function fetchSnapshot(signal:AbortSignal):Promise<Snapshot>{
  const response=await fetch('/api/usage',{cache:'no-store',signal}),body=await response.json();
  if(!response.ok)throw Error(body.error||'Não foi possível consultar o uso.');
  const parsed=usageSnapshotSchema.safeParse(body);if(!parsed.success)throw Error('Não foi possível conferir os limites. Tente novamente.');
- return {...parsed.data,aiEnabled:body.aiEnabled===true};
+ const aiUsage=aiUsageSummarySchema.safeParse(body.aiUsage);
+ return {...parsed.data,aiEnabled:body.aiEnabled===true,aiUsage:aiUsage.success?aiUsage.data:{generatedAt:new Date().toISOString(),windowDays:30,entries:[]}};
 }
 export default function SecurityUsage({open,onOpenChange,connected}:{open:boolean;onOpenChange:(open:boolean)=>void;connected:boolean}){
  const [snapshot,setSnapshot]=useState<Snapshot|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[exporting,setExporting]=useState(false),[notice,setNotice]=useState('');
@@ -39,6 +41,9 @@ export default function SecurityUsage({open,onOpenChange,connected}:{open:boolea
   finally{exportLock.current=false;setExporting(false);}
  }
  const primary=snapshot?.limits.filter(l=>l.bucket==='ai-call'||l.bucket==='ai-request'||l.bucket==='upload')||[];
+ const money=(value:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'USD',maximumFractionDigits:4}).format(value);
+ const tokenCount=(value:number)=>new Intl.NumberFormat('pt-BR').format(value);
+ const knownCosts=snapshot?.aiUsage.entries.map(estimatedCostUsd).filter((value):value is number=>value!==null)||[];
  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="security-dialog" onOpenAutoFocus={event=>{event.preventDefault();titleRef.current?.focus({preventScroll:true});}}><DialogHeader><DialogTitle ref={titleRef} tabIndex={-1} className="outline-none">Segurança e uso</DialogTitle><DialogDescription>Acompanhe os limites da sua conta e cuide da sua base de talentos.</DialogDescription></DialogHeader>
   <section className="security-protection"><ShieldCheck size={22}/><div><h2>Seu espaço é privado</h2><p>Currículos e registros ficam associados à sua conta. Os limites de uso são verificados no servidor.</p></div></section>
   <section aria-labelledby="usage-heading"><div className="security-section-heading"><h2 id="usage-heading"><Sparkles size={18}/>Uso da Talentia</h2><Button variant="outline" onClick={refresh} disabled={!connected||loading}><RefreshCw size={16}/>{loading?'Consultando…':'Atualizar uso'}</Button></div>
@@ -50,6 +55,7 @@ export default function SecurityUsage({open,onOpenChange,connected}:{open:boolea
     <p className="security-updated">Consulta de {renewalLabel(snapshot.generatedAt)} (Brasília). Use Atualizar uso após trabalhar na base.</p>
    </>}
   </section>
+  <section aria-labelledby="ai-cost-heading"><div className="security-section-heading"><h2 id="ai-cost-heading"><Sparkles size={18}/>Consumo estimado de IA</h2></div><p className="security-caption">Tokens registrados nos últimos 30 dias. A estimativa usa os preços atuais da Anthropic e pode diferir da fatura. Valores em dólar.</p>{!snapshot?<p role="status">O consumo aparecerá após carregar os limites.</p>:snapshot.aiUsage.entries.length===0?<p className="security-caption">Ainda não há consumo registrado. A medição começa após aplicar a migração e realizar novas chamadas.</p>:<><article className="usage-card"><h3>Total estimado</h3><p><strong>{knownCosts.length?money(knownCosts.reduce((sum,value)=>sum+value,0)):'—'}</strong></p></article><div className="usage-grid">{snapshot.aiUsage.entries.map(entry=>{const cost=estimatedCostUsd(entry);return <article className="usage-card" key={`${entry.task}-${entry.model}-${entry.batch}`}><h3>{aiTaskLabels[entry.task]}</h3><p><strong>{entry.model}</strong>{entry.batch?' · lote':''}</p><small>{entry.calls} chamadas · {tokenCount(entry.inputTokens)} tokens de entrada · {tokenCount(entry.outputTokens)} de saída</small><p>Estimativa: {cost===null?'modelo sem preço cadastrado':money(cost)}</p></article>})}</div></>}</section>
   <section className="security-export"><h2><Download size={18}/>Exportar dados cadastrais</h2><p>Baixe os candidatos ativos em CSV para abrir no Excel: nome, cargo, cidade, contatos, origem do currículo e datas de confirmação. A exportação usa os dados salvos na sua conta.</p><p className="security-caption">O arquivo contém informações pessoais. Guarde-o em um local seguro e compartilhe com cuidado.</p><Button className="primary-button" disabled={!connected||exporting} onClick={exportCandidates}><Download size={16}/>{exporting?'Preparando arquivo…':'Baixar candidatos em CSV'}</Button><p role="status" aria-live="polite" className="security-feedback">{notice}</p></section>
  </DialogContent></Dialog>;
 }

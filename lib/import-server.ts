@@ -2,9 +2,10 @@ import 'server-only';
 import {enforceRateLimit} from './rate-limit';
 import {batchSignature,verifiedBatch,deleteVerifiedBatches,type BatchProof} from './import-batch-integrity';
 import {database,HttpError,requireAiAccess} from './server';
-import {SYSTEM} from './claude';
+import {SYSTEM,recordAiUsage} from './claude';
+import {modelForTask} from './ai-models';
 import {pdfSchema,pdfContent} from './pdf-extraction';
-import {MAX_PDF_BYTES,batchExtraction} from './pdf-import';
+import {MAX_PDF_BYTES,batchExtractionResult} from './pdf-import';
 import {candidateSchema} from './validation';
 import {declaredCandidate} from './candidate-applications';
 import type {Candidate} from './domain';
@@ -23,7 +24,7 @@ export async function submitImport(row:StoredImport,bytes:Uint8Array){
  const claim=await db.from('pdf_imports').update({status:'sending',error:''}).eq('owner',row.owner).eq('id',row.id).eq('status','failed').select('id');
  if(claim.error||!claim.data?.length)throw new HttpError('Este arquivo já está sendo processado.',409);
  try{
-  const response=await anthropic('',{method:'POST',body:JSON.stringify({requests:[{custom_id:row.id,params:{model:process.env.ANTHROPIC_MODEL||'claude-sonnet-5-5',max_tokens:12000,system:SYSTEM,messages:[{role:'user',content:pdfContent(bytes)}],output_config:{format:{type:'json_schema',schema:pdfSchema}}}}]})});
+  const response=await anthropic('',{method:'POST',body:JSON.stringify({requests:[{custom_id:row.id,params:{model:modelForTask('pdf-extraction'),max_tokens:12000,system:SYSTEM,messages:[{role:'user',content:pdfContent(bytes)}],output_config:{format:{type:'json_schema',schema:pdfSchema}}}}]})});
   const batch=await response.json() as {id:string};
   if(!/^msgbatch_[a-zA-Z0-9]+$/.test(batch.id))throw new HttpError('Resposta inválida ao iniciar a leitura.',502);
   const saved=await db.from('pdf_imports').update({status:'processing',batch_id:batch.id,batch_signature:signature(row,batch.id)}).eq('owner',row.owner).eq('id',row.id);
@@ -53,7 +54,7 @@ export async function syncImports(owner:string){
    if(batch.processing_status!=='ended')continue;
    const response=await anthropic(`/${row.batch_id}/results`);
    let candidate:Candidate;
-   try{const extracted=candidateSchema.pick({name:true,role:true,city:true,text:true,phone:true,email:true}).parse(batchExtraction(await response.text(),row.id));candidate=candidateSchema.parse({...extracted,id:row.candidate_id,source:row.source,updated:new Date().toISOString(),demo:false,fileKey:row.file_key});}
+   try{const result=batchExtractionResult(await response.text(),row.id);if(result.usage)await recordAiUsage(owner,'pdf-extraction',modelForTask('pdf-extraction'),result.usage,true,`${row.batch_id}:${row.id}`);const extracted=candidateSchema.pick({name:true,role:true,city:true,text:true,phone:true,email:true}).parse(result.data);candidate=candidateSchema.parse({...extracted,id:row.candidate_id,source:row.source,updated:new Date().toISOString(),demo:false,fileKey:row.file_key});}
    catch{await db.from('pdf_imports').update({status:'failed',error:'O PDF não pôde ser lido por completo. Confira o arquivo e tente novamente.'}).eq('owner',owner).eq('id',row.id);continue;}
    // PDFs accepted from an application link carry the contacts the candidate declared in the form.
    // Only those imports query the applications table, so ordinary imports never depend on it.
