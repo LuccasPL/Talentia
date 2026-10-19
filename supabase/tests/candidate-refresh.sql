@@ -1,6 +1,6 @@
 -- Run inside BEGIN/ROLLBACK. Fixtures never survive this test.
 do $$
-declare uid uuid; cid uuid:=gen_random_uuid(); jid text:=gen_random_uuid()::text; issued jsonb; token text; payload jsonb; jobs jsonb; version integer; result jsonb; answer jsonb;
+declare uid uuid; cid uuid:=gen_random_uuid(); jid text:=gen_random_uuid()::text; issued jsonb; token text; payload jsonb; jobs jsonb; version integer; result jsonb; answer jsonb; attempts integer;
 begin
  select owner into uid from public.workspaces limit 1;
  if uid is null then raise exception 'Test needs an existing workspace';end if;
@@ -20,6 +20,15 @@ begin
  if public.access_candidate_refresh(repeat('0',64)) is not null then raise exception 'Invalid token accepted';end if;
  result:=public.access_candidate_refresh(token);
  if result->'context'->>'title'<>'Vaga fictícia de teste' or result::text like '%Teste de segurança fictício%' or result::text like '%phone%' then raise exception 'Public context leaked personal data';end if;
+ set local role postgres;
+ select access_count into attempts from public.candidate_refresh_links where id=(issued->>'id')::uuid;
+ set local role anon;
+ result:=public.access_candidate_refresh(token,'{}'::jsonb);
+ if result->>'error'<>'invalid' then raise exception 'Invalid response was not rejected';end if;
+ set local role postgres;
+ if (select access_count from public.candidate_refresh_links where id=(issued->>'id')::uuid)<>attempts+1 then raise exception 'Invalid response did not consume an access attempt';end if;
+ if exists(select 1 from public.candidate_refresh_links where id=(issued->>'id')::uuid and (response is not null or submitted_at is not null)) then raise exception 'Invalid response was stored';end if;
+ set local role anon;
  answer:=jsonb_build_object('phone','11999999999','email','','city','São Paulo','employment','Prefiro não informar','interest','Interessado','availability','A combinar','conditions','Preciso esclarecer','question','','allowContact',true,'acknowledged',true);
  if (public.access_candidate_refresh(token,answer)->>'received')::boolean is distinct from true then raise exception 'Response failed';end if;
  if public.access_candidate_refresh(token,answer) is not null then raise exception 'Token replay accepted';end if;
@@ -30,6 +39,16 @@ begin
  if not public.review_candidate_refresh((issued->>'id')::uuid,version,payload,jobs,'[]',false) then raise exception 'Review failed';end if;
  if public.review_candidate_refresh((issued->>'id')::uuid,version+1,payload,jobs,'[]',false) then raise exception 'Review replay accepted';end if;
  issued:=public.issue_candidate_refresh(cid,jid,'Teste',3);
+  set local role postgres;
+  update public.candidate_refresh_links set access_count=59,access_window=now() where id=(issued->>'id')::uuid;
+  set local role anon;perform set_config('request.jwt.claim.sub','',true);
+  result:=public.access_candidate_refresh(issued->>'token','{}'::jsonb);
+  if result->>'error'<>'invalid' then raise exception 'Invalid response at the limit was not counted';end if;
+  if public.access_candidate_refresh(issued->>'token') is not null then raise exception 'Access limit was not enforced';end if;
+  set local role postgres;
+  if (select access_count from public.candidate_refresh_links where id=(issued->>'id')::uuid)<>60 then raise exception 'Access limit counter exceeded its bound';end if;
+  set local role authenticated;perform set_config('request.jwt.claim.sub',uid::text,true);
+  issued:=public.issue_candidate_refresh(cid,jid,'Teste',3);
  perform public.revoke_candidate_refresh((issued->>'id')::uuid);
  set local role anon;perform set_config('request.jwt.claim.sub','',true);
  if public.access_candidate_refresh(issued->>'token') is not null then raise exception 'Revoked link accepted';end if;
