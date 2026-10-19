@@ -101,7 +101,7 @@ const selectionLoaded=loadedSelectionScope===selectionScope;
 const searchMatches=useMemo(()=>activeSearch?findSearchMatches(searchIndex,activeSearch.plan,activeSearch.mode):null,[searchIndex,activeSearch]);
 const candidates=useMemo(()=>{const filtered=filterCandidates(data.candidates,job,data.records,{...filters,query:search,onlyEvidence});return searchMatches?filtered.filter(c=>searchMatches.has(c.id)).sort((a,b)=>searchOrder(searchMatches.get(a.id),searchMatches.get(b.id))||a.name.localeCompare(b.name,'pt-BR')):filtered},[data.candidates,data.records,job,filters,search,onlyEvidence,searchMatches]);
 const serverBrowse=view==='candidates'&&!selectionLoaded&&!forceFullCandidates;
-const overviewDataSufficient=view==='overview'||view==='candidates'&&!forceFullCandidates||view==='job-directory';
+const overviewDataSufficient=view==='overview'||view==='job-directory'||view==='pipeline'||view==='journey'||view==='shortlist'||view==='agenda'||view==='reports'||view==='clients'||view==='candidates'&&!forceFullCandidates;
 const pagedKey=JSON.stringify([job.id,search,filters.city,filters.experience,filters.pending,filters.criterionId,onlyEvidence,filters.sort,activeSearch,candidatePage,data.version,pagedRevision]);
 const visiblePagedResult=pagedResult?.key===pagedKey?pagedResult.value:null;
 const visiblePagedError=pagedError?.key===pagedKey?pagedError.message:'';

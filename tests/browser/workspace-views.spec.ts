@@ -3,7 +3,7 @@ import type {Page} from '@playwright/test';
 
 // Regression coverage for the views extracted from app/workspace.tsx (ContactBoard, CandidateFiltersPanel, CandidateList).
 async function start(page:Page){await page.goto('/');await expect(page.getByRole('heading',{name:'Acompanhamento',exact:true})).toBeVisible();}
-async function open(page:Page,name:string){const mobile=page.getByRole('button',{name:'Abrir menu completo',exact:true});if(await mobile.isVisible())await mobile.click();await page.getByRole('button',{name,exact:true}).click();}
+async function open(page:Page,name:string){const mobile=page.getByRole('button',{name:'Abrir menu completo',exact:true});if(await mobile.isVisible())await mobile.click();await page.getByRole('button',{name,exact:false}).first().click();await expect(page.locator('.breadcrumb strong')).toHaveText(name);}
 async function talents(page:Page){if(page.viewportSize()!.width<768)await page.getByRole('button',{name:'Talentos',exact:true}).click();else await page.getByRole('button',{name:/^Banco de talentos \d/}).click();}
 
 test('workspace opens with related profiles and paginates vacancy browsing',async({page,sandbox})=>{
@@ -27,6 +27,23 @@ test('job directory uses related workspace data without loading the whole candid
  await start(page);await open(page,'Vagas');
  await expect(page.getByRole('heading',{name:'Vaga Fictícia Alfa',exact:true})).toBeVisible();
  await expect(page.getByText('1 de 1 vaga',{exact:true})).toBeVisible();
+ expect(scopes).toEqual(['overview']);
+ expect(sandbox.unexpected).toEqual([]);
+});
+
+for(const view of ['Painel da vaga','Funil de candidatos','Lista de interesse','Agenda','Pareceres','Clientes'])test(`${view}: usa perfis relacionados sem carregar a base completa`,async({page,sandbox})=>{
+ const clientId='00000000-0000-4000-8000-000000000099';
+ sandbox.data.jobs[0].clientId=clientId;
+ sandbox.data.clients=[{id:clientId,name:'Cliente Fictício',contact:'Contato Fictício',email:'',phone:'',notes:'',archived:false,updated:'2026-10-15T12:00:00.000Z'}];
+ sandbox.data.records.push({candidateId,jobId:sandbox.data.jobs[0].id,status:'Não contatado',interest:'Não confirmado',availability:'Não confirmada',notes:'',report:'Parecer fictício para teste.',shortlisted:true,appointments:[{id:'entrevista-ficticia',startsAt:new Date(Date.now()+60*60*1000).toISOString(),duration:45,format:'online',location:'',notes:'',status:'a-confirmar',updated:new Date().toISOString()}],events:[]});
+ const scopes:string[]=[];
+ page.on('request',request=>{const url=new URL(request.url());if(url.pathname==='/api/workspace'&&request.method()==='GET')scopes.push(url.searchParams.get('scope')||'full')});
+ await start(page);await open(page,view);
+ if(view==='Clientes'){
+  await page.getByRole('button',{name:'Ver cliente e vagas',exact:true}).click();
+  await expect(page.getByText('Vagas vinculadas',{exact:true})).toBeVisible();
+ }else if(view==='Agenda')await expect(page.getByRole('button',{name:/Pessoa Fictícia Alfa/}).first()).toBeVisible();
+ else await expect(page.getByText('Pessoa Fictícia Alfa',{exact:true}).first()).toBeVisible();
  expect(scopes).toEqual(['overview']);
  expect(sandbox.unexpected).toEqual([]);
 });
